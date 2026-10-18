@@ -1,0 +1,91 @@
+
+１　何を作ったのか(目的と概要)
+２　なぜその構成を選んだのか(設計上の選択)
+３　同じことをするには、何を、どの順番でやればいいのか(再現手順)
+
+Description: 数行でかまいません。VMとは何か、このプロジェクトで何を設定したか。
+Project description: 比較は、各項目を2〜4文で書けば十分です。「それぞれの特徴、自分はどちらを選んだか、理由」の3点がそろっていれば足ります。調べた内容を全部書く必要はありません。
+Instructions: コマンドを1行ずつ載せる必要はありません。「パーティションをLVMで分ける」「sshのポートを4242にする」のように、何を設定したかを、手順の順に書きます。設定したファイル名(/etc/ssh/sshd_config など)を添えると、読み手が確認しやすくなります。
+Resources: 参考にしたサイトを並べます。AIを使った場合は、どの部分にどう使ったかを書きます。
+
+書き始めるための方法
+実装した順に、各ステップを「何をしたか → 何のためか」の一文ずつで書き出してみる。
+
+パーティションをLVMで分けた → 後から容量を変えやすくするため
+sshのポートを4242に変えた → デフォルトの22番より狙われにくくするため
+
+これがそのまま、Instructionsの材料になる。
+「何のためか」が書けない設定があれば、そこがまだ理解しきれていない部分
+
+[VirtualBoxの設定]
+メモリ
+CPU
+ディスクサイズ
+ネットワークの形式
+
+
+[パーティション構成]sudo lsblk
+NAME                       MAJ:MIN RM  SIZE RO TYPE  MOUNTPOINTS
+sda                          8:0    0   20G  0 disk
+├─sda1                       8:1    0  918M  0 part  /boot
+├─sda2                       8:2    0    1K  0 part
+└─sda5                       8:5    0 19.1G  0 part
+  └─sda5_crypt             254:0    0 19.1G  0 crypt
+    ├─mkaneko42--vg-root   254:1    0    7G  0 lvm   /
+    ├─mkaneko42--vg-var    254:2    0    2G  0 lvm   /var
+    ├─mkaneko42--vg-swap_1 254:3    0  936M  0 lvm   [SWAP]
+    ├─mkaneko42--vg-tmp    254:4    0  568M  0 lvm   /tmp
+    └─mkaneko42--vg-home   254:5    0  8.6G  0 lvm   /home
+sr0                         11:0    1 1024M  1 rom
+
+[インストール時に選んだ項目]
+ホスト名 mkaneko42(/etc/hostname)
+ユーザー名 mkaneko
+暗号化の設定 LVMを選択し、論理ボリュームの割合を選択
+
+[設定したファイルとその場所と内容]
+仮想マシンに入った状態で
+    pwd              # 今いる場所を確認
+    ls /etc/ssh      # sshの設定が入っているディレクトリを見る
+    cd /etc          # /etc に移動
+別の方法でも確認できる
+    sudo find / -name "sshd_config" 2>/dev/null    # ファイル名で探す
+    man sshd_config                                # 末尾の FILES の項目に場所が載っている
+    man sudoers                                    # 同じく FILES の項目を見る
+
+
+sshd　/etc/ssh/sshd_config
+sudoers /etc/sudoers、/etc/sudoers.d/
+UFW /etc/ufw/(状態は sudo ufw status で確認)
+パスワードポリシー（表にする）
+    有効期限 /etc/login.defs
+    強度  /etc/pam.d/common-password
+cron    sudo crontab -l(rootのcrontab)
+
+
+
+[ sudo ufw status]
+Status: active
+
+To                         Action      From
+--                         ------      ----
+4242/tcp                   ALLOW       Anywhere
+4242/tcp (v6)              ALLOW       Anywhere (v6)
+
+[sudo visudo -c]
+/etc/sudoers: parsed OK
+/etc/sudoers.d/README: parsed OK
+
+[レビュー]
+- 仮想マシンとは？
+- LVMとは？　パーティション構成の意味
+- sudo, SSH, UFW, AppArmor, cronの役割と設定場所
+- パスワードポリシー(期限、文字数、libpam-pwquality)
+ 
+- monitoring.shの各行がしていること(sed awkなど)
+- sudo adduser
+- sudo addgroup
+- sudo usermod -aG
+- sudo hostnamectl set-hostname
+- sudo ufw allow / sudo ufw delete
+- sudo chage -l ユーザー名
