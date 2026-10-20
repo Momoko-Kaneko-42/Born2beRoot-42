@@ -399,7 +399,8 @@ password        required                        pam_permit.so
 - LVMとは？　パーティション構成の意味
 - sudo, SSH, UFW, AppArmor, cronの役割と設定場所
 - パスワードポリシー(期限、文字数、libpam-pwquality)
- 
+- 比較表(Debian と Rocky、AppArmor と SELinux など)や sudo の設定の理由は、READMEを見ずに話せるようにしておく
+
 - monitoring.shの各行がしていること(sed awkなど)
 - sudo adduser
 - sudo addgroup
