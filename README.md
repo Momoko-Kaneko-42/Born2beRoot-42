@@ -26,7 +26,7 @@
 | --- | --- | --- |
 | 対応OS | MacOS Windowsほか| MacOS |
 | 長所 | 多くのデバイスでLinuxのVMを管理でき、高度な機能がある | AppleシリコンMacでのパフォーマンスがよい |
-| 短所・負担 |　AppleシリコンのMacではパフォーマンスが遅くなる | GUIなしなど機能が少なく、互換性の選択肢が少ない |
+| 短所・負担 |　AppleシリコンのMacではamd64版のDebian ISOは使えない | GUIなしなど機能が少なく、互換性の選択肢が少ない |
 
 2. OS　Debian
   OSとしてDebianを選択したのは、初学者向けに推奨されていること、サーバー用途に定評があり、APT・UFW・AppArmorで基本的なサーバー管理を学べることからです。
@@ -122,8 +122,6 @@ UFW
   (3)基本モード → 新規を選択。
     - 無人インストールのチェックは外す。
   
-    - ISOは空欄。
-  
     - EFIにチェックはしない。
   
     - ディスクは動的割り当てにする。
@@ -147,9 +145,9 @@ UFW
   　(3)Domainは空欄
   
   　(4)ユーザーとパスワードの指定
-    rootのパスワードの入力と一般ユーザー名＆パスワードの入力をしログインする。
+    rootのパスワードの入力と一般ユーザー名＆パスワードを設定する。
   
-  　(5)rootまたは作成したユーザーでログインした状態でLVMを使ったパーティショニング設定を行う。
+  　(5)LVMを使ったパーティショニング設定を行う。
   　```
   　Guided use entire disks & set up encrypted LVM
   　Separate /home, /var and /tmp partitions
@@ -230,7 +228,7 @@ UFW
     (1)実際にSSHサービスが動いているか確認する。
 
     ```
-    sudo systemctl | status ssh　→ Active: active(running)があればok
+    sudo systemctl status ssh　→ Active: active(running)があればok
     ```
 
     (2)SSHの設定ファイルを開く。
@@ -238,9 +236,9 @@ UFW
     ```
     sudo nano /etc/ssh/sshd_config
     ```
-    `#port 22` →　port 4242に変更
+    `#Port 22` →　Port 4242に変更
 
-    `#permitRootLogin prohibit-password` → PermitRootLogin noに変更
+    `#PermitRootLogin prohibit-password` → PermitRootLogin noに変更
 
     `#`は削除し保存します。
 
@@ -261,15 +259,12 @@ UFW
 
     (5)実際に一般ユーザーでSSH接続できるかを確認する
 
-    - VMのIPアドレスを確認する。
-    ```
-    ip addr -> inetと書かれているものの中で127.0.0.1でないほうを探す。
-    ```
-
+    - ネットワークがNATを採用しているので、VirtualBoxでポートフォワーディング(ホスト4242→ゲスト4242)を設定する。
+   
     - SSH接続を試す。
     ターミナルで
     ```
-    ssh -p 4242 ホスト名@VPのIPアドレス
+    ssh -p 4242 ユーザー名@127.0.0.1
     "are you sure you want to continue connecting(yes/no/fingerprint)?"->yesにする
     プロンプトに戻れば成功
     ```
@@ -285,20 +280,20 @@ UFW
   ```
   sudo aa-status　→ AppArmorがどのような状態で動いているかを表示するコマンド
   sudo systemctl status apparmor → Apparmorが起動しているか確認
-  sudo aa-status | grep -E 'apparmor module | profiles are loaded | profiles are in enforce mode'　→必要なプロファイルが適用されているか確認できる。
+  sudo aa-status | grep -E 'apparmor module|profiles are loaded|profiles are in enforce mode'
+  →必要なプロファイルが適用されているか確認できる。
   ```
 
 6. UFWを有効にする。(sudo ufw allow 4242/tcp)
     (1)現在の状態を確認する
 
     ```
-    sudo ufw status → 入ってなければインストール
+    sudo ufw show added → 入ってなければインストール
     sudo apt update
     sudo apt install ufw
     ```
 
-    (2)SSH用ポートの許可が先に済んでいることを確認する
-    - SSHのポート番号の確認
+    (2)SSHのポート番号の確認
     ```
     sudo grep -i '^Port ' /etc/ssh/sshd_config　→ port 4242であればよい。
     ```
@@ -340,7 +335,8 @@ UFW
     (2)user42グループが存在するか確認する
     ```
     getent group user42　→　何も返ってこなければ追加する必要がある
-    sudo groupadd user42 →　追加のコマンド。user42:x(グループパスワード欄):1001(gid):メンバー一覧のように表示されれば成功
+    sudo groupadd user42 →　追加のコマンド。
+    getent group user42を実行し、user42:x(グループパスワード欄):1001(gid):メンバー一覧のように表示されれば成功
     ```
 
     (3)ユーザーをuser42グループに追加する必要があるか確認してから追加。
@@ -398,9 +394,9 @@ UFW
     cat /etc/debian-version
     ```
 
-    (2)パスワードの強度をチェックするためのパッケージ(libpam_pwquality)がインストールされているか調べる
+    (2)パスワードの強度をチェックするためのパッケージ(libpam-pwquality)がインストールされているか調べる
     ```
-    dpkg -l libpam_pwquality　➺インストール済みなら、ii libpam_pwqualityという記述がでる。
+    dpkg -l libpam-pwquality　➺インストール済みなら、ii libpam-pwqualityという記述がでる。
     ```
     ＊dpkg ➺　Debianパッケージのインストール・ビルド・削除・管理を行うツール
 
@@ -415,19 +411,23 @@ UFW
     grep -E '^(minlen|ucredit|lcredit|dcredit|maxrepeat|usercheck)' /etc/security/pwquality.conf
     ```
 
-    (5)パスワード変更時にルールが実際に使われるようにPAM(Pluggable Autentication Modules)の設定を確認
+    (5)パスワード変更時にルールが実際に使われるようにPAM(Pluggable Authentication Modules)の設定を確認
     ```
     grep -n 'pam_pwquality' /etc/pam.d/common-password
-    grep -nE 'pam_pwquality|pam_pwhistory|pam_unix' /etc/pam.d/common_password ➺　パスワードの強度チェック、過去のパスワード履歴、通常のパスワード認証をチェック
+    grep -nE 'pam_pwquality|pam_pwhistory|pam_unix' /etc/pam.d/common-password ➺　パスワードの強度チェック、過去のパスワード履歴、通常のパスワード認証をチェック
     ```
     - PAMは設定ファイルに書かれたモジュール名を見て、必要なときにこのファイルを読み込んで実行する。
 
-    (6)有効期限などの時間に関する設定はConfigurationsの表に記載。一般ユーザーだけでなくrootの設定も変更した。
+    (6)有効期限などの時間に関する設定はConfigurationsの表に記載。一般ユーザーだけでなくrootの設定も変更した。→　既存のユーザーとrootには以下の指定が必要。 
+    ```
+    chage -M 30 -m 2 -W 7 ユーザー名
+    ```
+    `login.defs'のPASS_MAX_DAYSなどはこれから作るユーザーにしかきかないため。
 
     (7)設定後に全ユーザーのパスワードを変更する場合の方法
       1. common-passwordの現在の設定を確認する
       ```
-      grep -nE 'pam_pwquality|pam_unix' /etc/pam.d /etc/pam.d/common-password
+      grep -nE 'pam_pwquality|pam_unix' /etc/pam.d/common-password
       表示例
         password requites pam_pwquality.so retry=3 enfnorce_for_root
         password [success=1 default=ignore] pam_unix.so obscure use_authtok try_first_pass yescrypt
@@ -451,7 +451,7 @@ UFW
       passwd
         Current password ➺　現在のパスワードを入力
         New password ➺　新しいパスワードを入力
-        Retype new passwaord ➺　新しいパスワードを再入力
+        Retype new password ➺　新しいパスワードを再入力
       ```
 
       5. rootのパスワードを変更する
@@ -501,11 +501,11 @@ UFW
   sudo crontab -e　→　この時刻にこのコマンドを実行するという指示を書くもの
 
   crontabに次の行を追加する。
-  cron */10 * * * * /usr/local/bin/monitoring.sh
-
+  */10 * * * * ホームディレクトリ/monitoring.sh
   確認
   sudo crontab -l
   ```
+  (*/10→１０分ごと　*は前から、毎時・毎日・毎月・すべての曜日でスクリプトを実行するという意味。)
 
 
 12. 新しいユーザーの作り方(sudo adduser)(Linuxではユーザーとグループを使ってファイルやシステムの捜査権限を管理する)
@@ -534,7 +534,7 @@ whoami
 sudo whoami
 ```
 
-12. signature.txtファイルを作成する。VMをシャットダウンし、SHA-1ハッシュ値を計算したものを保存する。
+13. signature.txtファイルを作成する。VMをシャットダウンし、SHA-1ハッシュ値を計算したものを保存する。
 ```
 ・VMをシャットダウン
 sudo shutdown -h now
@@ -607,35 +607,55 @@ certUtil -hashfile "Born2beRoot.vdi" SHA1
 ##### Configuration
 
 - ユーザーの設定
+
 | 項目 | 名称 | 設定場所 |
 | --- | --- | --- |
 | ホスト名 | mkaneko42 | Debianのインストール |
 | ユーザー名 | mkaneko | Debianのインストール |
 
+
 - パスワード設定
-|項目	         | ファイル	      | 設定	               | 理由 |
-|有効期限	     | /etc/login.defs	| PASS_MAX_DAYS 30	  | 定期的な変更を強制|
-|変更間隔の下限	|/etc/login.defs	  |PASS_MIN_DAYS 2	    |すぐ元に戻すのを防ぐ|
-|期限前の警告	  |/etc/login.defs	  |PASS_WARN_AGE 7	    |期限切れ前に気づける|
-|最小文字数・文字種・連続文字・ユーザー名禁止など	|
+
+| 要件  | ファイル  	| 設定 |理由|
+| --- | --- | --- | --- |
+| 有効期限３０日 | `/etc/login.defs` |PASS_MAX_DAYS 30 | 漏洩のリスクを下げる|
+| 変更間隔の下限２日	|`/etc/login.defs`|PASS_MIN_DAYS 2 | 頻繁に変えすぎない|
+|期限７日前の警告	  |`/etc/login.defs`	  |PASS_WARN_AGE 7	    |期限切れ前に気づける|
+|最少１０文字|`/etc/security/pwquality.conf`|minlen = 10|短すぎないほうが安全|
+|文字種(数字・大文字・小文字を含む)|`/etc/security/pwquality.conf`|dcredit = -1 ucredit = -1 lcredit = -1|複雑にする|
+|同一連続文字３文字以下|`/etc/security/pwquality.conf`|maxrepeat = 3|推測されにくくする|
+|ユーザー名禁止|`/etc/security/pwquality.conf`|usercheck = 1|推測されにくくする|
+|前のパスワードと異なる文字を7文字以上含む(root以外)|`/etc/security/pwquality.conf`|difok = 7|使いまわしの防止|
+|rootもこのポリシーに従う(difok=7以外)|`/etc/common-password`|enforce_for_root|rootの安全も守る|
+
+＊ファイルの場所確認しておくこと！＊
+*最小文字数・文字種・連続文字・ユーザー名禁止など	|
                /etc/pam.d/common-password または 
                /etc/security/pwquality.conf	minlen, ucredit, lcredit, dcredit, maxrepeat, usercheck, difok, enforce_for_root など	強度の確保
-- sudoの設定
-|項目|ファイル｜意味｜
-|`passwd_tries=3`|/etc/sudoers|1回のパスワード誤入力は３回まで|
-|`bad_pass`|/etc/sudoers|誤パスワードへのメッセージ|
-|`logfile`|/etc/sudoers|コマンド履歴を`/var/log/sudo/sudo.log`に記録|
-|`use_pty`|/etc/sudoers|TTYモードの有効化|
-|`secure_path`|/etc/sudoers|sudoのパスを`/usr/local/sbin: /usr/local/bin: /usr/sbin: /usr/bin: /sbin: /bin: /snap/bin`に制限|
 
-##### Installation
-###### VirtualBox
-自分のpcにはVirtualBoxがなかったので、Oracle VM VirtualBoxからVirtualBox platform packagesよりwindows host用のVirtualBox 7.0.26をダウンロードしてインストール
-##### partitioning
-##### sudo
-##### hostname
-##### SSH
-##### UFW
-##### Groups
-##### Passwords
+- sudoの設定
+
+|要件|ファイル|設定|
+| --- | --- | --- |
+|1回のパスワード誤入力は３回まで|`/etc/sudoers`|`passwd_tries=3`|
+|誤パスワードへのメッセージ|`/etc/sudoers`|`badpass_message="Password is incorrect"`|
+|コマンド履歴をログに記録|`/etc/sudoers`|`log_input, log_output iolog_dir="/var/log/sudo" logfile="/var/log/sudo/sudo.log"`|
+|TTYモードの有効化|`/etc/sudoers`|`use_pty`コマンドを専用の記事端末内で実行|
+|sudo実行時のコマンドを探索するパスを制限|`/etc/sudoers`|`secure_path="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"`|
+
+- 監視スクリプト
+
+|表示項目|表示データの取得方法|
+| --- | --- |
+|OS| `uname -a`|
+|CPUソケット数 vCPU|`/proc/cpuinfo`の中のIDの重複を削除、processor行をそれぞれ数える|
+|RAM使用量(割合)|`free`のused(used*100/total)。使用量・総量・割合|
+|ディスク使用量(割合)|`df`で容量の表示単位を削除|
+|CPU負荷|`top`でCPUのアイドル率を100から引く|->自信ない
+|最終起動日時|`who -b`から取得|
+|LVM使用の有無|`lsblk`の中にlvmの行があるかどうか|
+|TCP接続数|`ss -tan`のestablished行の数|
+|ログイン中のユーザー数|`who`のユーザー名の重複を除去した数|
+|IPアドレスとMACアドレス|`hostname -I`でIPアドレス、`ip link show`で最初に見つかったMACアドレス|
+|sudo実行回数|`journalctl _COMM=sudo`でCOMMANDとある行の数|
 

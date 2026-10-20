@@ -121,6 +121,10 @@ Defaults        passwd_tries=3
 Defaults        badpass_message="Password is incorrect"
 Defaults        logfile="/var/log/sudo/sudo.log"
 
+!!!要追加!!!26/10/20
+  Defaults log_input, log_output
+  Defaults iolog_dir="/var/log/sudo"
+
 
 [/etc/security/pwquality.conf]
 # Configuration for systemwide password quality limits
@@ -317,7 +321,7 @@ CHFN_RESTRICT           rwh
 #
 # Note: It is recommended to use a value consistent with
 # the PAM modules configuration.
-#
+# ログインパスワードを安全に保存するためのハッシュ方式
 ENCRYPT_METHOD YESCRYPT
 
 #
@@ -387,6 +391,45 @@ password        requisite                       pam_deny.so
 password        required                        pam_permit.so
 # and here are more per-package modules (the "Additional" block)
 # end of pam-auth-update config
+
+[README修正内容]
+2. 手順の矛盾・不自然な点
+手順1の(2)では「ISOを指定」、(3)では「ISOは空欄」と書かれていて矛盾します。
+手順2の(5)「ログインした状態でパーティショニング」は誤りです。パーティション設定はインストーラーの途中で行うもので、ログイン前です。(4)の「ログインする」も、実際はインストール完了後の操作です。
+手順2の(6)の「パッケージマネージャを設定する」と、利用統計(popularity-contest)の質問は別の話です。
+手順2の(9)「プロンプトが出ていればインストールできています」は曖昧です。「再起動後に暗号化のパスフレーズ入力、続いてログイン画面が出る」と書くと確認しやすくなります。
+「インストールしたサービス」の一覧にあるVirtualBoxはホスト側のソフトで、VM内のものではありません。VM内ではSSH、sudo、cron、libpam-pwqualityなども入れています。
+signature.txtについて:
+手順13の certUtil はWindows専用です(Macなら shasum)。
+ファイル名が「Born2beRoot.vdi」と「mkaneko42.vdi」で不一致です。
+「.vdi1」は誤字です。
+「signature.txtの値=.vdi」は、「signature.txtのハッシュ値が.vdiのSHA-1と一致する」と書くと伝わります。
+VMを起動するとハッシュ値が変わるので、評価時はクローンやスナップショットを使う旨を書いておくと親切です。
+3. 構成・書式
+課題PDFで、READMEの言語(英語指定の可能性があります)と、必須の比較項目(Docker等との比較が含まれていないか)を再確認してください。
+作業メモが残っています:「＊ファイルの場所確認しておくこと！＊」と、その下の minlen, ucredit… の断片です。消すか表に統合してください。
+冒頭の「仮想マシンとは、」の直後が定義になっていません。「ソフトウェア上に仮想的に作られたコンピューター」のような定義を先に書いてください。
+見出しが ## project description や #### Details ##### Configuration など、レベルが飛んでいて小文字も混ざっています。## Description、### 設計上の選択、## Instructions、### Configuration のように揃えると読みやすくなります。
+全角スペースでのインデントと、リスト内のコードブロックが崩れる可能性があります。GitHub上のプレビューで確認し、半角スペース4つの入れ子に直すと安全です。
+UFWの表の「系統: Ubuntu」は、「Ubuntu標準(Debianでも利用可)」とした方が正確です。また「ディストリビューション標準のものを素直に使う」は、Debianには標準のファイアウォールがないためUFWには当てはまりません。「簡潔で資料が多いため」などの理由に差し替えてください。
+SELinuxの採用ディストリに、比較対象のRocky Linuxを足すと表が揃います。
+Resourcesの「公式ダウンロード」と書いたリンクの先が、実際は7.0のマニュアルになっています。
+「ログに残し、定期的にログに残してメッセージを出す」(項目7)は重複しています。monitoring.shはwallで全端末にメッセージを出すスクリプトなので、「サーバーの状態を定期的に全端末へ表示する」と整理してください。
+4. 誤字・表記ゆれ
+誤	正
+Visualbox / Virtualox	VirtualBox
+ソフトウエア	ソフトウェア
+SShで	SSHで
+最新安定板	最新安定版
+Debian Released	Debian Releases
+/etc/suoers	/etc/sudoers
+sysetm	system
+requites / enfnorce_for_root	requisite / enforce_for_root
+passwaord	password
+Autentication	Authentication
+Apparmor	AppArmor
+
+修正を反映した全文版が必要でしたら、お知らせください。
 
 
 [レビュー]
