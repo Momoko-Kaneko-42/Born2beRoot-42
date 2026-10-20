@@ -4,7 +4,7 @@
 ホストOSの下に仮想マシンを構築し、GUIを使わず、パーティション、ユーザー、ネットワークまで1から自分で設定することで、
 設定の意味と動作を説明できることを目標とする課題です。
 
-仮想マシンとは、
+仮想マシンとは、ソフトウェア上に仮想的に作られたコンピューターで、
 ホストの資源を消費し、ホスト故障の影響も受けるため、物理的に独立した機械と同じではありません。
 しかし、ホストOSの中にいながら、ホストOSの環境を壊さずに別のパソコンとして動かせるので、
 同じ物理端末で複数のOSを動かす、構築や障害対応を試す、環境を分離することが可能です。
@@ -16,10 +16,10 @@
 仮想マシンを安全に使いやすくするための設定をおこないました。
 そのための選択とその理由は後述します。
 
-## project description
+## Project description
 このプロジェクトの構成の選択とその理由について
 
-1. 仮想化ソフトウエア　VirtualBox
+1. 仮想化ソフトウェア　VirtualBox
 　  VirtualBoxは課題で基本として設定されており、多様なLinuxとの互換性に優れています。
 
 | 比較軸 | VirtualBox（採用） | UTM |
@@ -47,7 +47,7 @@
 
 3. パーティション構成にLVMを選択したのは、後から容量を変えやすくするためです。
 
-4. sshのポートを4242に変更したのは課題要件ですが、 SShで接続できるポート番号を制限し、さらにUFWで許可ポートを絞ることとの組み合わせで効果が出てくると思います。
+4. sshのポートを4242に変更したのは課題要件ですが、 SSHで接続できるポート番号を制限し、さらにUFWで許可ポートを絞ることとの組み合わせで効果が出てくると思います。
 
 5. セキュリティ上の観点から以下を設定 
   - パスワードポリシーの期限・品質制限　→　文字種や数が多い強いパスワードや有効期限を設けました。
@@ -62,17 +62,15 @@
 
 | 比較軸 | UFW（採用） | firewalld |
 | --- | --- | --- |
-| 系統 | Ubuntu | CentOS/RHEL/AlmaLinux/Fedora系|
-| 長所 | コマンドが簡潔でわかりやすい。IPv6に対応 | ゾーンベースの管理やランタイム/パーマネント設定の分離が特徴 |
-
-＊選択方法 → ディストリビューション標準のものを素直に使う
+| 系統 |Ubuntu標準(Debianでも利用可) | CentOS/RHEL/AlmaLinux/Fedora系|
+| 長所 | コマンドが簡潔でわかりやすく資料が多いため。IPv6に対応 | ゾーンベースの管理やランタイム/パーマネント設定の分離が特徴 |
 
 
 7. サーバーの状態をログに残し、定期的にログに残してメッセージを出す(monitoring.sh cron)ことで、正常に作動しているか確認する。
 
 8. インストールしたサービスは以下の通りです。
-Visualbox
 Debian
+SSH、sudo、cron、libpam-pwquality
 AppArmor
 UFW
 
@@ -81,7 +79,7 @@ UFW
 以下の順番で設定を行いました。
 
 0. 課題要件を基準にDebianのバージョンと仮想マシン(VM)の構成を決める。
-  - Debian Released(https://www.debian.org/)より最新安定板はDebian 13.7 amd64 trixie。
+  - Debian Released(https://www.debian.org/)より最新安定版はDebian 13.7 amd64 trixie。
 
   - VMソフト　  VirtualBox7.2.20
 
@@ -182,7 +180,7 @@ UFW
   　(8)GRUB ブートローダ　yes　→　インストール先指定 /dev/sda
     ＰＣに電源が入ると、BIOS/UEFIが動き、GRUBが起動する。GRUBとはLinuxカーネルを見つけて、メモリに　読み込み起動させることが仕事です。
 
-  　(9)continueを押してプロンプトが出ていればインストールできています。
+  　(9)continueを押してプロンプトが出ていればインストールできています。再起動後に暗号化のパスフレーズ入力、続いてログイン画面が出ます。
 
 
 
@@ -275,11 +273,11 @@ UFW
     whoami -> 一般ユーザー名
     ```
 
-5. Apparmorの確認(sudo aa-status)
+5. AppArmorの確認(sudo aa-status)
   - インストール済みか確認する。VisualBoxマネージャからVMを起動 → Debianにログインし以下を実行
   ```
   sudo aa-status　→ AppArmorがどのような状態で動いているかを表示するコマンド
-  sudo systemctl status apparmor → Apparmorが起動しているか確認
+  sudo systemctl status apparmor → AppArmorが起動しているか確認
   sudo aa-status | grep -E 'apparmor module|profiles are loaded|profiles are in enforce mode'
   →必要なプロファイルが適用されているか確認できる。
   ```
@@ -363,7 +361,7 @@ UFW
     (2)sudoの設定ファイルを確認する
     ```
     sudo cat /etc/sudoers
-    sudo grep -nE '^(Defaults|%sudo|%user42|ユーザー名)' /etc/suoers ➺ 現在のデフォルト値を見ることができる
+    sudo grep -nE '^(Defaults|%sudo|%user42|ユーザー名)' /etc/sudoers ➺ 現在のデフォルト値を見ることができる
     ```
 
     (3)ログの保存先ディレクトリをターミナルで作成する。
@@ -429,7 +427,7 @@ UFW
       ```
       grep -nE 'pam_pwquality|pam_unix' /etc/pam.d/common-password
       表示例
-        password requites pam_pwquality.so retry=3 enfnorce_for_root
+        password requisite pam_pwquality.so retry=3 enforce_for_root
         password [success=1 default=ignore] pam_unix.so obscure use_authtok try_first_pass yescrypt
       ```
       - 先にパスワードの品質をチェック(pam_pwquality.so)
@@ -540,18 +538,20 @@ sudo whoami
 sudo shutdown -h now
 
 ・仮想ディスク(.vdi)を探す
-・SHA-1 ハッシュ値を計算する。.vdi1ファイルのあるディレクトリで
-certUtil -hashfile "Born2beRoot.vdi" SHA1
+・SHA-1 ハッシュ値を計算する。.vdiファイルのあるディレクトリで
+certUtil -hashfile "Born2beRoot.vdi" SHA1（Windows用）
+Macなら shasum
 ```
- * signature.txtの値 = .vdiとなるようにする。 
+* signature.txtのハッシュ値が.vdiのSHA-1と一致するようにする。VMを起動するとハッシュ値が変わるので、評価時はクローンやスナップショットを使う。
 
 
 ## Resources
 - VirtualBox公式サイト
   Oracle VM VirtualBox 公式ダウンロード
-  (https://docs.oracle.com/en/virtualization/virtualbox/7.0/user/)
+  (https://www.oracle.com/virtualization/technologies/vm/downloads/virtualbox-downloads.html)
 
-- VirtualoxとUTMの比較
+
+- VisualBoxとUTMの比較
   (https://linux-jp.org/?p=16476)
 
 - Debian Releases:OSについて
@@ -588,7 +588,7 @@ certUtil -hashfile "Born2beRoot.vdi" SHA1
   (https://manpages.debian.org/trixie/cron/crontab.5.en.html)
 
 - signature.txt
-  certUtil -hashfile "mkaneko42.vdi" SHA1
+  certUtil -hashfile "Born2beRoot.vdi" SHA1
 
 - apt 
   man 8 apt(使い方)
@@ -603,8 +603,8 @@ certUtil -hashfile "Born2beRoot.vdi" SHA1
 ・一次情報の調べ方と、調べたうえで意味が分からないところの解説。
 
 
-#### Details
-##### Configuration
+## Details
+### Configuration
 
 - ユーザーの設定
 
@@ -628,10 +628,6 @@ certUtil -hashfile "Born2beRoot.vdi" SHA1
 |前のパスワードと異なる文字を7文字以上含む(root以外)|`/etc/security/pwquality.conf`|difok = 7|使いまわしの防止|
 |rootもこのポリシーに従う(difok=7以外)|`/etc/common-password`|enforce_for_root|rootの安全も守る|
 
-＊ファイルの場所確認しておくこと！＊
-*最小文字数・文字種・連続文字・ユーザー名禁止など	|
-               /etc/pam.d/common-password または 
-               /etc/security/pwquality.conf	minlen, ucredit, lcredit, dcredit, maxrepeat, usercheck, difok, enforce_for_root など	強度の確保
 
 - sudoの設定
 

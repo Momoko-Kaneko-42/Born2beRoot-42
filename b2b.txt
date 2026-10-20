@@ -415,21 +415,7 @@ UFWの表の「系統: Ubuntu」は、「Ubuntu標準(Debianでも利用可)」�
 SELinuxの採用ディストリに、比較対象のRocky Linuxを足すと表が揃います。
 Resourcesの「公式ダウンロード」と書いたリンクの先が、実際は7.0のマニュアルになっています。
 「ログに残し、定期的にログに残してメッセージを出す」(項目7)は重複しています。monitoring.shはwallで全端末にメッセージを出すスクリプトなので、「サーバーの状態を定期的に全端末へ表示する」と整理してください。
-4. 誤字・表記ゆれ
-誤	正
-Visualbox / Virtualox	VirtualBox
-ソフトウエア	ソフトウェア
-SShで	SSHで
-最新安定板	最新安定版
-Debian Released	Debian Releases
-/etc/suoers	/etc/sudoers
-sysetm	system
-requites / enfnorce_for_root	requisite / enforce_for_root
-passwaord	password
-Autentication	Authentication
-Apparmor	AppArmor
 
-修正を反映した全文版が必要でしたら、お知らせください。
 
 
 [レビュー]
