@@ -1,162 +1,156 @@
 *This project has been created as part of the 42 curriculum by mkaneko.*
+
 # Born2beRoot
+
 ## Description
-ホストOSの下に仮想マシンを構築し、GUIを使わず、パーティション、ユーザー、ネットワークまで1から自分で設定することで、
-設定の意味と動作を説明できることを目標とする課題です。
 
-仮想マシンとは、ソフトウェア上に仮想的に作られたコンピューターで、
-ホストの資源を消費し、ホスト故障の影響も受けるため、物理的に独立した機械と同じではありません。
-しかし、ホストOSの中にいながら、ホストOSの環境を壊さずに別のパソコンとして動かせるので、
-同じ物理端末で複数のOSを動かす、構築や障害対応を試す、環境を分離することが可能です。
+ホストOSの下に仮想マシンを構築し、GUIを使わず、パーティション、ユーザー、ネットワークまで1から自分で設定することで、設定の意味と動作を説明できることを目標とする課題です。
 
-仮想マシンのメリットとしては、本番運用しているシステムと同時運用できることで移行がスムーズになったり、
-増加や削除が容易で必要な時だけ使えて資源が無駄にならないことなどがあげられます。
-デメリットは、オーバーヘッド（処理負荷）やリソース競合が発生し、性能が低下する可能性があることと、セキュリティや適切なリソース対策の必要性など運用が複雑化することです。
+### 仮想マシンとは
 
-仮想マシンを安全に使いやすくするための設定をおこないました。
-そのための選択とその理由は後述します。
+仮想マシン(VM)とは、ソフトウェア上に仮想的に作られたコンピューターです。ホストの資源を消費し、ホスト故障の影響も受けるため、物理的に独立した機械と同じではありません。しかし、ホストOSの環境を壊さずに別のパソコンとして動かせるので、次のことができます。
+
+- 同じ物理端末で複数のOSを動かす
+- 構築や障害対応を試す
+- 環境を分離する
+
+**メリット**
+
+- 本番運用しているシステムと同時運用できるため、移行がスムーズになる
+- 増加や削除が容易で、必要な時だけ使えるため資源が無駄にならない
+
+**デメリット**
+
+- オーバーヘッド(処理負荷)やリソース競合により、性能が低下する可能性がある
+- セキュリティや適切なリソース対策が必要になり、運用が複雑化する
 
 ## Project description
-このプロジェクトの構成の選択とその理由について
 
-1. 仮想化ソフトウェア　VirtualBox
-　  VirtualBoxは課題で基本として設定されており、多様なLinuxとの互換性に優れています。
+このプロジェクトでは、仮想マシンを安全に使いやすくするための設定を行いました。構成の選択とその理由は以下の通りです。
 
-| 比較軸 | VirtualBox（採用） | UTM |
+### 1. 仮想化ソフトウェア: VirtualBox
+
+VirtualBoxは課題で基本として設定されており、多様なLinuxとの互換性に優れています。
+
+| 比較軸 | VirtualBox(採用) | UTM |
 | --- | --- | --- |
-| 対応OS | MacOS Windowsほか| MacOS |
+| 対応OS | macOS、Windowsほか | macOS |
 | 長所 | 多くのデバイスでLinuxのVMを管理でき、高度な機能がある | AppleシリコンMacでのパフォーマンスがよい |
-| 短所・負担 |　AppleシリコンのMacではamd64版のDebian ISOは使えない | GUIなしなど機能が少なく、互換性の選択肢が少ない |
+| 短所・負担 | AppleシリコンのMacではamd64版のDebian ISOが使えない | VirtualBoxに比べて機能や資料が少なく、互換性の選択肢が少ない |
 
-2. OS　Debian
-  OSとしてDebianを選択したのは、初学者向けに推奨されていること、サーバー用途に定評があり、APT・UFW・AppArmorで基本的なサーバー管理を学べることからです。
+### 2. OS: Debian
 
-| 比較軸 | Debian（採用） | Rocky Linux |
+Debianを選択したのは、初学者向けに推奨されていること、サーバー用途に定評があること、APT・UFW・AppArmorで基本的なサーバー管理を学べることからです。
+
+| 比較軸 | Debian(採用) | Rocky Linux |
 | --- | --- | --- |
 | 系統・管理 | Debian系、dpkg・APT、`.deb` | RHEL互換、RPM・DNF、`.rpm` |
 | 長所 | stableの安定性、豊富なパッケージと資料 | RHEL互換の運用・企業向け環境を学べる |
-| 短所・負担 | 安定性重視のため最新機能が必要な用途に合わない場合がある | 初学者にはSELinuxやfirewalldの設定も含め学習負担がある |
+| 短所・負担 | 安定性重視のため、最新機能が必要な用途に合わない場合がある | 初学者にはSELinuxやfirewalldの設定も含め学習負担がある |
 | この課題での保護機構 | AppArmor・UFW | SELinux・firewalld |
 
-| 比較軸 | Apparmor（採用） | SELinux |
+### 3. アクセス制御: AppArmor
+
+| 比較軸 | AppArmor(採用) | SELinux |
 | --- | --- | --- |
-| アクセス制御方式 | ファイルパスベース | セキュリティラベル（コンテキスト）ベース |
-| デフォルト採用 | Ubuntu, Debian, SUSE | RHEL, CentOS, Fedora, AlmaLinux |
-| 学習コスト | 比較的低い(パスの記述が直観的) | 高い(ラベル管理の概念理解必要) | 
+| アクセス制御方式 | ファイルパスベース | セキュリティラベル(コンテキスト)ベース |
+| デフォルト採用 | Ubuntu、Debian、SUSE | RHEL、CentOS、Fedora、AlmaLinux |
+| 学習コスト | 比較的低い(パスの記述が直感的) | 高い(ラベル管理の概念理解が必要) |
 | カバー範囲 | プロファイルが存在するプロセスのみ | システム全体 |
 
-3. パーティション構成にLVMを選択したのは、後から容量を変えやすくするためです。
+### 4. ファイアウォール: UFW
 
-4. sshのポートを4242に変更したのは課題要件ですが、 SSHで接続できるポート番号を制限し、さらにUFWで許可ポートを絞ることとの組み合わせで効果が出てくると思います。
+UFWはLinuxのパケットフィルタを管理するツールです。ポートや接続元に対する許可を簡潔に記述でき、この課題のような少数のルールを扱うのに適しています。
 
-5. セキュリティ上の観点から以下を設定 
-  - パスワードポリシーの期限・品質制限　→　文字種や数が多い強いパスワードや有効期限を設けました。
-  - sudoの認証制限 → 管理者権限を誰でも使えるようすると不正な操作が行われる可能があるため、sudoを使えるユーザーを制限し、だれがどのような管理操作を行ったか記録できるようにする。
-  - 操作ログ　→  安全に作動しているか確認する。
-  - UFWで4242/TCPのみ受信許可 ->　ネットワークの入り口を絞ることで攻撃のリスクを減らす。
-  - rootのSSHログイン禁止 →　rootは名前が知られていて最大権限を持つので、直接ログインを許すと攻撃されやすく、侵入された時の被害も大きい。一般ユーザー + sudoにすると、攻撃の難易度が上がり、操作の記録も残せる。
-  - AppArmor →　起動時に自動で立ち上がるように設定されていることを確認し、今回中身は変更していない。
-
-6. Linuxのパケットフィルタを管理するツール　UFW
-ポートや接続元に対する許可を簡潔に記述することができ、この課題のような少数のルールを扱うのに適しています。
-
-| 比較軸 | UFW（採用） | firewalld |
+| 比較軸 | UFW(採用) | firewalld |
 | --- | --- | --- |
-| 系統 |Ubuntu標準(Debianでも利用可) | CentOS/RHEL/AlmaLinux/Fedora系|
-| 長所 | コマンドが簡潔でわかりやすく資料が多いため。IPv6に対応 | ゾーンベースの管理やランタイム/パーマネント設定の分離が特徴 |
+| 系統 | Ubuntu標準(Debianでも利用可) | CentOS / RHEL / AlmaLinux / Fedora系 |
+| 長所 | コマンドが簡潔でわかりやすく、資料が多い | ゾーンベースの管理や、ランタイム/パーマネント設定の分離ができる |
 
+### 5. パーティション構成: LVM
 
-7. サーバーの状態をログに残し、定期的にログに残してメッセージを出す(monitoring.sh cron)ことで、正常に作動しているか確認する。
+後から容量を変えやすくするためにLVMを選択しました。さらにLUKSで暗号化しています。
 
-8. インストールしたサービスは以下の通りです。
-Debian
-SSH、sudo、cron、libpam-pwquality
-AppArmor
-UFW
+### 6. セキュリティ上の設定
 
+| 設定 | 内容と理由 |
+| --- | --- |
+| SSHポートを4242に変更 | 課題要件です。接続できるポート番号を限定し、UFWで許可ポートを絞ることとの組み合わせで効果が出ます。 |
+| rootのSSHログイン禁止 | rootは名前が知られていて最大権限を持つため、直接ログインを許すと攻撃されやすく、侵入時の被害も大きくなります。一般ユーザー + sudoにすると攻撃の難易度が上がり、操作の記録も残せます。 |
+| UFWで4242/TCPのみ受信許可 | ネットワークの入り口を絞ることで、攻撃のリスクを減らします。 |
+| パスワードポリシー(期限・品質) | 文字種や文字数の条件を厳しくし、有効期限を設けて、漏洩や推測のリスクを下げます。 |
+| sudoの認証制限 | 管理者権限を誰でも使えると不正な操作が行われる可能性があるため、sudoを使えるユーザーを制限し、誰がどのような管理操作を行ったかを記録します。 |
+| 操作ログ | sudoの操作を記録し、安全に動作しているか確認できるようにします。 |
+| AppArmor | 起動時に自動で立ち上がる設定になっていることを確認しました。プロファイルの中身は変更していません。 |
+| monitoring.sh + cron | サーバーの状態を定期的に全端末へ表示し、正常に動作しているか確認します。 |
+
+### 7. インストールしたサービス
+
+| 分類 | サービス |
+| --- | --- |
+| 管理・認証 | SSH、sudo、cron、libpam-pwquality |
+| セキュリティ | AppArmor、UFW |
 
 ## Instructions
+
 以下の順番で設定を行いました。
 
-0. 課題要件を基準にDebianのバージョンと仮想マシン(VM)の構成を決める。
-  - Debian Released(https://www.debian.org/)より最新安定版はDebian 13.7 amd64 trixie。
+### 0. 構成を決める
 
-  - VMソフト　  VirtualBox7.2.20
+課題要件を基準に、Debianのバージョンと仮想マシンの構成を決めます。
 
-  - CPU　2コア
+<!-- TODO: 校舎PCで使ったバージョンに更新(Debian / VirtualBox) -->
+- Debian: [Debian Releases](https://www.debian.org/) の最新安定版 Debian 13.7 amd64 (trixie)
+- 仮想化ソフト: VirtualBox 7.2.20
 
-  - メモリ　2048MB
+| 項目 | 設定 |
+| --- | --- |
+| CPU | 2コア |
+| メモリ | 2048MB |
+| 仮想ディスク | 20GB(動的割り当て) |
+| グラフィック | 最小限 |
+| ネットワーク | NAT(Network Address Translation。ホストOSのインターネット回線を借りてネットにつなぐ仕組み) |
+| GUI | なし |
+| SSHポート | 4242 |
+| ディスク暗号化 | LUKS + LVM |
 
-  - 仮想ディスク　20GB
+### 1. 仮想マシンの作成
 
-  - ディスク方式　動的割り当て
-
-  - グラフィック　最小限
-
-  - ネットワーク　NAT(Network Address Translation) ホストOSのインターネット回線を借りてネットにつなぐ仕組み
-
-  - GUI　なし
-
-  - SSH　4242番
-
-  - ディスク暗号化　LUKS + LVM
-
-1. 仮想マシンの作成(VirtualBox7.2.20)
-  (1)仮想化ソフトVirtualBox7.2.20をインストールする。
-
-  (2)設定内容
+1. 仮想化ソフトVirtualBoxをインストールする。
+2. VirtualBoxマネージャで「新規」を選び(基本モード)、次を設定する。
     - VM名
+    - ISO: Debian 13.7 netinst(ダウンロードしたファイルのパスを指定)
+    - 「無人インストール」のチェックは外す
+    - 「EFI」にチェックは入れない
+    - CPU: 2コア / メモリ: 2048MB / ディスク: 20GB
+    - ディスクは**動的割り当て**にする(「Full Disk Allocation(事前に全量確保)」や固定サイズは選ばない)
+3. ネットワークを設定する。VMを右クリック → 設定 → ネットワーク → アダプター1に「Intel PRO/1000 MT デスクトップ(NAT)」を指定する。
+4. 起動ボタンを押すと、Debianのインストーラーが起動する。
 
-    - ISO Debian 13.7 netinst(ダウンロードしたファイルのパスを指定)
+ディスクの暗号化(LVM)はDebianのインストーラー側で設定するため、VirtualBox側では普通の仮想ディスクを用意するだけで十分です。
 
-    - CPU　2コア
+<!-- TODO: 校舎PCでISOの保存場所・VirtualBoxの画面表示が違えば更新 -->
 
-    - メモリ　2048MB
+### 2. Debianのインストールとパーティション設定
 
-    - ディスク　20GB
+公式サイトからダウンロードしたISOをVirtualBoxに指定しておくと、続けてインストールが始まります。
 
-    - ネットワーク　NAT(仮想マシンを右クリック→設定→ネットワーク→アダプター１にIntel PRO/1000 MT デスクトップ(NAT)を指定する)
+1. **言語・キーボード**: JapaneseやJapanを選ぶ。選択肢がなければEnglishやusでも問題ない。キーボードは使っている配列に合わせる。
+2. **ホスト名**: `intra名42`(例: `mkaneko42`)
+3. **ドメイン**: 空欄
+4. **ユーザーとパスワード**: rootのパスワードと、一般ユーザー名・パスワードを設定する。
+5. **パーティショニング**: 次のメニューを選ぶ。
 
-  (3)基本モード → 新規を選択。
-    - 無人インストールのチェックは外す。
-  
-    - EFIにチェックはしない。
-  
-    - ディスクは動的割り当てにする。
-  
-    - 選んではいけないもの→[Full Disk Allocation(ディスクを事前に全量確保)][固定サイズ]
-    　ディスクの暗号化LVMはDebianのインストーラー側で設定するため、VirtualBox側では普通の仮想ディスクを用意するだけでよい。
+```
+    Guided - use entire disk and set up encrypted LVM
+    Separate /home, /var and /tmp partitions
+```
 
-  (4)起動ボタンを押す。Debianのインストーラーが起動する。
+    暗号化用のパスフレーズの入力画面が出るので指定する。LVMのボリュームグループのうち、どれだけの容量を使うか聞かれるが、動的割り当てなので100%で問題なかった。実際の分割は以下の通り。
 
-
-2. OS(Debian 13.7 amd64 trixie)のインストールとLVMを使ってパーティショニング設定を行う。
-  - 公式サイトからダウンロードしてVirtualBoxの設定にファイルパスを指定しておくと引き続きインストールされる。
-  
-  　(1)表示言語の文字コードの設定を行う。
-      JapaneseやJapanを選択するが選択肢がなければEnglishやusでも問題ない。
-      keyboardの欄は使っているキーボード配列によって決める。
-  
-  　(2)ホスト名の指定
-      intra名⁺42
-  
-  　(3)Domainは空欄
-  
-  　(4)ユーザーとパスワードの指定
-    rootのパスワードの入力と一般ユーザー名＆パスワードを設定する。
-  
-  　(5)LVMを使ったパーティショニング設定を行う。
-  　```
-  　Guided use entire disks & set up encrypted LVM
-  　Separate /home, /var and /tmp partitions
-  　```
-  　上記のメニューを選択して進むと、暗号化するためのパスフレーズを入力する画面が出るので、指定する。
-  　LVMで使ったVolumeGroupのうち、どれだけの容量を今回の論理ボリュームで使うか聞いてくるので、
-  　動的に割り当ててくれるため、100%としても大丈夫でした。
-  　以下が実際の分割です。
-
-    ```
-    sudo lsblk
+    <!-- TODO: 校舎PCで実装後、sudo lsblk の結果に差し替え -->
+```
+    $ sudo lsblk
     NAME                       MAJ:MIN RM  SIZE RO TYPE  MOUNTPOINTS
     sda                          8:0    0   20G  0 disk
     ├─sda1                       8:1    0  918M  0 part  /boot
@@ -169,489 +163,491 @@ UFW
         ├─mkaneko42--vg-tmp    254:4    0  568M  0 lvm   /tmp
         └─mkaneko42--vg-home   254:5    0  8.6G  0 lvm   /home
     sr0                         11:0    1 1024M  1 rom
-    ```
+```
 
-    /boot はカーネルなどの起動ファイル用です。LUKS内にroot・home・swapを置き、OSやユーザーデータ、swapへの書き込みを暗号化します。rootとhomeのLVを分けて容量を個別に割り当てます。
-  
-  　(6)パッケージマネージャを設定する、としてDebianの利用統計に送信するかどうかを聞かれたらNoにして構い　ません。
+    `/boot` はカーネルなどの起動ファイル用です。LUKSの中にroot・home・swapなどを置くことで、OSやユーザーデータ、swapへの書き込みが暗号化されます。rootとhomeは論理ボリュームを分けて、容量を個別に割り当てています。
 
-  　(7)Software selectionでは、SSH serverと、選択できるならstandard sysetm utilitiesにチェックを入　れる。要件にx.org Wayland or any other equivalent graphics server are forbiddenとあるので、デ　スクトップ環境は選ばないようにします。
+6. **パッケージマネージャの設定**: Debianの利用統計を送信するか聞かれたら、Noにして問題ない。
+7. **Software selection**: 「SSH server」と、選べるなら「standard system utilities」にチェックを入れる。課題要件でX.OrgやWaylandなどのグラフィックサーバーが禁止されているので、デスクトップ環境は選ばない。
+8. **GRUBブートローダ**: インストールする(Yes)。インストール先は `/dev/sda`。PCの電源が入るとBIOS/UEFIが動き、続いてGRUBが起動する。GRUBの役割は、Linuxカーネルを見つけてメモリに読み込み、起動させること。
+9. **完了**: continueを押し、再起動後に暗号化のパスフレーズ入力、続いてログイン画面が出ればインストール成功。
 
-  　(8)GRUB ブートローダ　yes　→　インストール先指定 /dev/sda
-    ＰＣに電源が入ると、BIOS/UEFIが動き、GRUBが起動する。GRUBとはLinuxカーネルを見つけて、メモリに　読み込み起動させることが仕事です。
+### 3. sudoを使えるようにする
 
-  　(9)continueを押してプロンプトが出ていればインストールできています。再起動後に暗号化のパスフレーズ入力、続いてログイン画面が出ます。
+sudoは、一般ユーザーが一時的に管理者権限でコマンドを実行するための仕組みです。Windowsで例えると、インストール時に「管理者として実行」する操作に近いです。
 
+| 種類 | 説明 |
+| --- | --- |
+| 一般ユーザー(この課題では `intra名`) | 普通の作業をするユーザー。自分のファイルは操作できるが、システム全体に関わる変更は制限される。 |
+| 管理者(root) | システム全体を管理できる特別なユーザー。ユーザーの追加やシステム設定の変更ができる。 |
 
-
-3. sudoを使えるようにする。 一般ユーザーから実行する。(usermod -aG sudo intra名)
-  -  sudoは一般ユーザーが一時的に管理者権限を使ってコマンドを実行するための仕組みです。Windowsで例えるとインストール時に管理者として実行する操作に近いと思います。
-  - Linuxにあるユーザー権限
-    ・一般ユーザー（この課題ではintra名）→　普通の作業をするユーザーで自分のファイルを操作できる。システム全体に関する変更には制限がある。
-    ・管理者(root)　→　システム全体を管理できる特別なユーザー。ユーザーの追加・システム設定の変更を行うことができる。
-
-    (1)今の状態を確認する
-    ```
-    whoami　→　intra名ならok
-    ```
-
-    (2)sudoがあるか確認
-    ```
-    sudo --version
-    ```
-    なければ一度rootでログインしなおす
-    ```
-    su - →　rootのパスワードを聞かれるので入力
-    apt update →Debianのパッケージ一覧を最新にしてから
-    apt install sudo
-    ```
-
-    (3)一般ユーザーをsudoグループに追加する。rootから実行
-    ```
-    usermod -aG sudo intra名
-    exit →　rootから抜ける
-    exit →　一般ユーザーからもログアウト
-    ```
-
-    (4)再度一般ユーザーでログインし、sudoが使えるようになったか確認する。
-    ```
-    sudo whoami
-    [sudo]password for 一般ユーザーのパスワード
-    ```
-    rootと表示されればok。sudoを使ってroot権限でコマンドを実行できたという意味です。
-
-
-4. SSHのポートを４２４２にする。 一般ユーザーで実行。(/etc/ssh/sshd_config)
-
-    (1)実際にSSHサービスが動いているか確認する。
-
-    ```
-    sudo systemctl status ssh　→ Active: active(running)があればok
-    ```
-
-    (2)SSHの設定ファイルを開く。
-
-    ```
-    sudo nano /etc/ssh/sshd_config
-    ```
-    `#Port 22` →　Port 4242に変更
-
-    `#PermitRootLogin prohibit-password` → PermitRootLogin noに変更
-
-    `#`は削除し保存します。
-
-    nano の保存は ctrl+O -> enter -> ctrl+x
-
-    (3)設定を反映するためにSSHサービスを再起動する。
-
-    ```
-    sudo systemctl restart ssh
-    sudo ss -tlnp | grep ssh ->LISTENの表示に4242が出ていれば成功
-    ```
-
-    (4)rootログイン禁止の確認
-
-    ```
-    sudo sshd -T | grep permitrootlogin -> permitrootlogin noで成功
-    ```
-
-    (5)実際に一般ユーザーでSSH接続できるかを確認する
-
-    - ネットワークがNATを採用しているので、VirtualBoxでポートフォワーディング(ホスト4242→ゲスト4242)を設定する。
-   
-    - SSH接続を試す。
-    ターミナルで
-    ```
-    ssh -p 4242 ユーザー名@127.0.0.1
-    "are you sure you want to continue connecting(yes/no/fingerprint)?"->yesにする
-    プロンプトに戻れば成功
-    ```
-
-    - 今どこにいるか確認
-    ```
-    hostname ->  ホスト名
-    whoami -> 一般ユーザー名
-    ```
-
-5. AppArmorの確認(sudo aa-status)
-  - インストール済みか確認する。VisualBoxマネージャからVMを起動 → Debianにログインし以下を実行
-  ```
-  sudo aa-status　→ AppArmorがどのような状態で動いているかを表示するコマンド
-  sudo systemctl status apparmor → AppArmorが起動しているか確認
-  sudo aa-status | grep -E 'apparmor module|profiles are loaded|profiles are in enforce mode'
-  →必要なプロファイルが適用されているか確認できる。
-  ```
-
-6. UFWを有効にする。(sudo ufw allow 4242/tcp)
-    (1)現在の状態を確認する
-
-    ```
-    sudo ufw show added → 入ってなければインストール
-    sudo apt update
-    sudo apt install ufw
-    ```
-
-    (2)SSHのポート番号の確認
-    ```
-    sudo grep -i '^Port ' /etc/ssh/sshd_config　→ port 4242であればよい。
-    ```
-
-    (3)SSHポートを許可する
-    ```
-    sudo ufw allow 4242/tcp
-    ```
-
-    (4)ufwを有効にする前に4242番ポートを許可するルールが登録されたことを確認
-    ```
-    sudo ufw status
-      To                         Action      From
-      --                         ------      ----
-      4242/tcp                   ALLOW       Anywhere
-      4242/tcp (v6)              ALLOW       Anywhere (v6)
-      のようになっていれば許可されている
-    ```
-    * 先頭が Status: inactive になっている場合は、ルールを登録しただけでファイアウォールは有効でない。
-
-    (5)ufwを有効にする
-    ```
-    sudo ufw enable　→　その後 sudo ufw statusで有効になったか確認する。
-    余分なルールがある場合は以下のように削除する。
-    sudo ufw delete allow 22/tcp(または sudo ufw status numbered で番号を指定)で削除
-    sudo ufw status verbose
-    ```
-    verbose: デフォルトポリシー(incomingはdeny、outgoingはallowなど)も一緒に表示される。
-
-7. ユーザーをグループに追加する。(sudo usermod -aG user42 ユーザー名)
-  ログインユーザーがuser42とsudoの両グループに所属しているか確認する
-    (1)現在のユーザーとグループの状態を確認する
-    ```
-    whoami
-    id →　今ログインしているユーザーが所属しているグループが表示される
-    ```
-    すでに3.でsudoグループには追加されているので、user42グループに追加。
-
-    (2)user42グループが存在するか確認する
-    ```
-    getent group user42　→　何も返ってこなければ追加する必要がある
-    sudo groupadd user42 →　追加のコマンド。
-    getent group user42を実行し、user42:x(グループパスワード欄):1001(gid):メンバー一覧のように表示されれば成功
-    ```
-
-    (3)ユーザーをuser42グループに追加する必要があるか確認してから追加。
-    ```
-    id ユーザー名　→　groupsにuser42がなかったら所属させる
-    sudo usermod -aG user42 ユーザー名
-    id ユーザー名で確認
-    ```
-    - -aG　既存グループ所属を維持しながら追加のグループに所属させる
-
-8. sudoのセキュリティ設定をする。(/etc/sudoers visudoで編集)
-    (1)現在のsudo設定を確認する。
-    ```
-    sudo -l ➺　パスワードを入力する
-    ```
-    - 表示内容
-    ・sudo実行時の環境変数や実行環境を制御する設定
-    ・メール通知の設定
-    ・パスの制限
-    ・どのホストに対する設定か
-    ・そのユーザーとして実行するか
-    ・実行できるコマンド
-
-    (2)sudoの設定ファイルを確認する
-    ```
-    sudo cat /etc/sudoers
-    sudo grep -nE '^(Defaults|%sudo|%user42|ユーザー名)' /etc/sudoers ➺ 現在のデフォルト値を見ることができる
-    ```
-
-    (3)ログの保存先ディレクトリをターミナルで作成する。
-    - ログの保存先は/var/log/sudo
-    ```
-    sudo mkdir -p /var/log/sudo
-    sudo touch /var/log/sudo/sudo.log
-    sudo chown root:root /var/log/sudo/sudo.log ➺　ファイルの所有者とグループをrootにする
-    sudo chmod 600 /var/log/sudo/sudo.log ➺　rootだけが読み書き可にする
-    ls -l /var/log/sudo/sudo.log →　作成できたか確認
-    ls -ld /var/log/sudo ➺　ログのディレクトリとファイルの権限を確認
-    ```
-
-    (4)設定ファイルと編集する
-    - visudoコマンドで編集すると構文チェックをしてくれて安全。
-
-    - 設定ファイルのバックアップをしてから編集(編集内容はConfigurationに記述)
-    ```
-    sudo cp /etc/sudoers /etc/sudoers.bak
-    sudo visudo ➺　編集する
-    sudo -l ➺　変更できたか確認
-    sudo tail -n 5 /var/log/sudo/sudo.log　➺　ログに記録が表示されれば成功
-    ```
-
-9. パスワードポリシーの設定(PAM(pam_pwquality)で実装)（詳細はConfigurationへ）
-    (1)Debianのバージョンを確認する
-    ```
-    cat /etc/debian-version
-    ```
-
-    (2)パスワードの強度をチェックするためのパッケージ(libpam-pwquality)がインストールされているか調べる
-    ```
-    dpkg -l libpam-pwquality　➺インストール済みなら、ii libpam-pwqualityという記述がでる。
-    ```
-    ＊dpkg ➺　Debianパッケージのインストール・ビルド・削除・管理を行うツール
-
-    (3)パスワードポリシーの設定ファイルを確認し編集する。
-    ```
-    sudo nano /etc/security/pwquality.conf
-    ```
-    - 負数の値は最低必要な文字数を表し、正数は長さの判定をするとき、その数の分だけプラスして判定するという意味です。
-
-    (4)追加した設定の確認
-    ```
-    grep -E '^(minlen|ucredit|lcredit|dcredit|maxrepeat|usercheck)' /etc/security/pwquality.conf
-    ```
-
-    (5)パスワード変更時にルールが実際に使われるようにPAM(Pluggable Authentication Modules)の設定を確認
-    ```
-    grep -n 'pam_pwquality' /etc/pam.d/common-password
-    grep -nE 'pam_pwquality|pam_pwhistory|pam_unix' /etc/pam.d/common-password ➺　パスワードの強度チェック、過去のパスワード履歴、通常のパスワード認証をチェック
-    ```
-    - PAMは設定ファイルに書かれたモジュール名を見て、必要なときにこのファイルを読み込んで実行する。
-
-    (6)有効期限などの時間に関する設定はConfigurationsの表に記載。一般ユーザーだけでなくrootの設定も変更した。→　既存のユーザーとrootには以下の指定が必要。 
-    ```
-    chage -M 30 -m 2 -W 7 ユーザー名
-    ```
-    `login.defs'のPASS_MAX_DAYSなどはこれから作るユーザーにしかきかないため。
-
-    (7)設定後に全ユーザーのパスワードを変更する場合の方法
-      1. common-passwordの現在の設定を確認する
-      ```
-      grep -nE 'pam_pwquality|pam_unix' /etc/pam.d/common-password
-      表示例
-        password requisite pam_pwquality.so retry=3 enforce_for_root
-        password [success=1 default=ignore] pam_unix.so obscure use_authtok try_first_pass yescrypt
-      ```
-      - 先にパスワードの品質をチェック(pam_pwquality.so)
-      - 次にパスワードを設定(pam_unix.so)
-  
-      2. pwquality.confでdifokの設定を確認する(同じ文字があってもいい文字数)
-        ```
-        grep -n 'difok' /etc/security/pwquality.conf
-        ```
-
-      3. 対象となるユーザーアカウントを確認する。
-      （rootとUIDが1000以上のアカウントについて、ユーザ名・UID・ログインシェルを表示）
-      ```
-      awk -F: '$3 >= 1000 || $1 == "root"{print $1, $3, $7}' /etc/passwd
-      ```
-
-      4. mkanekoのパスワードを変更する
-      ```
-      passwd
-        Current password ➺　現在のパスワードを入力
-        New password ➺　新しいパスワードを入力
-        Retype new password ➺　新しいパスワードを再入力
-      ```
-
-      5. rootのパスワードを変更する
-      ```
-      sudo passwd root
-      ```
-
-
-10. 監視スクリプト(monitoring.sh)を作る。
-  - 一般ユーザーで作業する。
-  - ファイルの作成先　ホームディレクトリ
-  - Bashスクリプトなのでシバンを入れる。
-  - monitoring.shのファイル名で中身を編集
-  ```
-  nano monitoring.sh
-  ```
-  - 取得した情報を一つのメッセージにまとめ、wallで表示する。wallを用いると各端末にメッセージが送られる。
-
-  - 表示内容についてはconfigurationに記載。
-
-
-11. 定期的に監視スクリプトを自動実行する設定（cronで決まった間隔で実行できる。crontab）
-  (1)cronのインストール
-  ```
-  sudo apt update →　パッケージ一覧を最新にする
-  sudo apt install cron
-  ```
-
-  (2)cronサービスを起動し、自動起動を有効にする。
-  ```
-  sudo systemctl enable --now cron
-  sudo systemctl status cron →　状態の確認
-  ```
-
-  (3)スクリプトを実行できるようにする
-  - monitoring.shを置く場所にcronのパスを指定する。
-  ```
-  sudo chmod +x monitoring.shのパス
-  ```
-  - まずは手動実行してエラーがないことを確認する。
-  ```
-  sudo  monitoring.shのパス
-  ```
-
-  (4)rootのcrontabに定期実行を登録する
-  ```
-  sudo crontab -e　→　この時刻にこのコマンドを実行するという指示を書くもの
-
-  crontabに次の行を追加する。
-  */10 * * * * ホームディレクトリ/monitoring.sh
-  確認
-  sudo crontab -l
-  ```
-  (*/10→１０分ごと　*は前から、毎時・毎日・毎月・すべての曜日でスクリプトを実行するという意味。)
-
-
-12. 新しいユーザーの作り方(sudo adduser)(Linuxではユーザーとグループを使ってファイルやシステムの捜査権限を管理する)
+1. 現在のユーザーを確認する(`intra名` ならOK)。
 
 ```
-・新しいユーザーを追加する（一般ユーザーで実行）。
+    whoami
+```
+
+2. sudoがあるか確認する。
+
+```
+    sudo --version
+```
+
+    なければ、一度rootでログインし直してインストールする。
+
+```
+    su -              # rootのパスワードを入力
+    apt update        # パッケージ一覧を最新にする
+    apt install sudo
+```
+
+3. rootから、一般ユーザーをsudoグループに追加する。
+
+```
+    usermod -aG sudo intra名
+    exit              # rootから抜ける
+    exit              # 一般ユーザーからもログアウト
+```
+
+4. 再度一般ユーザーでログインし、sudoが使えるか確認する。`root` と表示されればOK(sudoでroot権限のコマンドを実行できたという意味)。
+
+```
+    sudo whoami
+```
+
+### 4. SSHのポートを4242にする
+
+一般ユーザーで実行します。
+
+1. SSHサービスが動いているか確認する。`Active: active (running)` があればOK。
+
+```
+    sudo systemctl status ssh
+```
+
+2. 設定ファイルを編集する。
+
+```
+    sudo nano /etc/ssh/sshd_config
+```
+
+    | 変更前 | 変更後 |
+    | --- | --- |
+    | `#Port 22` | `Port 4242` |
+    | `#PermitRootLogin prohibit-password` | `PermitRootLogin no` |
+
+    先頭の `#`(コメントアウト)は削除する。nanoの保存は `Ctrl+O` → `Enter` → `Ctrl+X`。
+
+3. 設定を反映するためにSSHを再起動し、ポートを確認する。LISTENの表示に4242が出ていれば成功。
+
+```
+    sudo systemctl restart ssh
+    sudo ss -tlnp | grep ssh
+```
+
+4. rootログイン禁止を確認する。`permitrootlogin no` と出れば成功。
+
+```
+    sudo sshd -T | grep permitrootlogin
+```
+
+5. 一般ユーザーでSSH接続できるか確認する。
+    - ネットワークがNATなので、VirtualBoxでポートフォワーディング(ホスト4242 → ゲスト4242)を設定する。
+    - ホストのターミナルから接続する。`Are you sure you want to continue connecting` と聞かれたら `yes` を入力し、プロンプトに戻れば成功。
+
+```
+        ssh -p 4242 ユーザー名@127.0.0.1
+```
+
+    - 接続先を確認する。
+
+```
+        hostname    # ホスト名
+        whoami      # 一般ユーザー名
+```
+
+### 5. AppArmorの確認
+
+VirtualBoxマネージャからVMを起動し、Debianにログインして実行します。
+
+```
+sudo aa-status                        # AppArmorの状態を表示
+sudo systemctl status apparmor        # AppArmorが起動しているか確認
+sudo aa-status | grep -E 'apparmor module|profiles are loaded|profiles are in enforce mode'
+```
+
+最後のコマンドで、必要なプロファイルが適用されているか確認できます。
+
+### 6. UFWを有効にする
+
+1. UFWがインストールされているか確認し、なければインストールする。
+
+```
+    dpkg -l ufw
+    sudo apt update
+    sudo apt install ufw
+```
+
+2. SSHのポート番号を確認する。`Port 4242` であればよい。
+
+```
+    sudo grep -i '^Port ' /etc/ssh/sshd_config
+```
+
+3. SSHポートを許可する。
+
+```
+    sudo ufw allow 4242/tcp
+```
+
+4. 有効にする前に、ルールが登録されたことを確認する。
+
+```
+    sudo ufw status
+```
+
+```
+    To                         Action      From
+    --                         ------      ----
+    4242/tcp                   ALLOW       Anywhere
+    4242/tcp (v6)              ALLOW       Anywhere (v6)
+```
+
+    上のようになっていれば許可されている。先頭が `Status: inactive` の場合は、ルールを登録しただけでファイアウォールはまだ有効になっていない。
+
+5. UFWを有効にして確認する。
+
+```
+    sudo ufw enable
+    sudo ufw status verbose
+```
+
+    `verbose` を付けると、デフォルトポリシー(incomingはdeny、outgoingはallowなど)も一緒に表示される。余分なルールがある場合は削除する。
+
+```
+    sudo ufw delete allow 22/tcp
+    # または sudo ufw status numbered で番号を確認し、番号を指定して削除
+```
+
+### 7. ユーザーをグループに追加する
+
+ログインユーザーが `user42` と `sudo` の両方のグループに所属している状態にします。
+
+1. 現在のユーザーとグループを確認する。`id` は所属グループを表示する。sudoグループには手順3で追加済みなので、`user42` グループに追加する。
+
+```
+    whoami
+    id
+```
+
+2. `user42` グループが存在するか確認する。何も返らなければ作成する。`user42:x:1001:メンバー一覧` のように表示されれば成功。
+
+```
+    getent group user42
+    sudo groupadd user42
+    getent group user42
+```
+
+3. ユーザーが `user42` に所属しているか確認し、いなければ追加する。`-aG` は、既存のグループ所属を維持したまま追加のグループに所属させるオプション。
+
+```
+    id ユーザー名
+    sudo usermod -aG user42 ユーザー名
+    id ユーザー名
+```
+
+### 8. sudoのセキュリティ設定
+
+設定内容は[Configuration](#sudoの設定)に記載しています。
+
+1. 現在のsudo設定を確認する(パスワードを入力)。表示される内容は、sudo実行時の環境変数、メール通知、パスの制限、対象ホスト、実行ユーザー、実行できるコマンドなど。
+
+```
+    sudo -l
+```
+
+2. 設定ファイルの現在のデフォルト値を確認する。
+
+```
+    sudo cat /etc/sudoers
+    sudo grep -nE '^(Defaults|%sudo|%user42|ユーザー名)' /etc/sudoers
+```
+
+3. ログの保存先(`/var/log/sudo`)を作成する。
+
+```
+    sudo mkdir -p /var/log/sudo
+    sudo touch /var/log/sudo/sudo.log
+    sudo chown root:root /var/log/sudo/sudo.log    # 所有者とグループをrootにする
+    sudo chmod 600 /var/log/sudo/sudo.log          # rootだけが読み書き可にする
+    ls -l /var/log/sudo/sudo.log                   # ファイルの権限を確認
+    ls -ld /var/log/sudo                           # ディレクトリの権限を確認
+```
+
+4. 設定ファイルをバックアップしてから、`visudo` で編集する。`visudo` は構文チェックをしてくれるので安全。
+
+```
+    sudo cp /etc/sudoers /etc/sudoers.bak
+    sudo visudo
+```
+5. TTYモードの動作を確認する。端末を割り当てない形でSSH経由のsudoを実行すると、拒否されればOK。
+
+```
+    ssh -T -p 4242 ユーザー名@127.0.0.1 sudo whoami
+
+```
+    `sudo: a tty is required` のようなエラーが出れば、TTY必須の設定が効いている。
+
+6. 変更を確認する。ログに記録が表示されれば成功。
+
+```
+    sudo -l
+    sudo tail -n 5 /var/log/sudo/sudo.log
+```
+
+### 9. パスワードポリシーの設定
+
+PAM(`pam_pwquality`)で実装します。設定値は[Configuration](#パスワード設定)に記載しています。
+
+1. Debianのバージョンを確認する。
+
+```
+    cat /etc/debian_version
+```
+
+2. パスワードの強度チェック用パッケージ(`libpam-pwquality`)がインストールされているか確認する。インストール済みなら `ii  libpam-pwquality` と表示される(`dpkg` はDebianのパッケージを管理するツール)。
+
+```
+    dpkg -l libpam-pwquality
+```
+
+3. 設定ファイルを編集する。
+
+```
+    sudo nano /etc/security/pwquality.conf
+```
+
+    `*credit` の値は、負数なら「最低限必要な文字数」、正数なら「長さの判定時に加算できる上限」を意味する。
+
+4. 追加した設定を確認する。
+
+```
+    grep -E '^(minlen|ucredit|lcredit|dcredit|maxrepeat|usercheck|difok)' /etc/security/pwquality.conf
+```
+
+5. パスワード変更時にルールが使われるよう、PAM(Pluggable Authentication Modules)の設定を確認する。PAMは設定ファイルに書かれたモジュール名を見て、必要なときにそのモジュールを読み込んで実行する。
+
+```
+    grep -nE 'pam_pwquality|pam_pwhistory|pam_unix' /etc/pam.d/common-password
+```
+
+    表示例:
+
+```
+    password requisite pam_pwquality.so retry=3 enforce_for_root
+    password [success=1 default=ignore] pam_unix.so obscure use_authtok try_first_pass yescrypt
+```
+
+    先にパスワードの品質をチェック(`pam_pwquality.so`)し、次にパスワードを設定(`pam_unix.so`)する。
+
+6. 有効期限などの時間に関する設定は、[Configuration](#パスワード設定)の表の通り `/etc/login.defs` に書く。ただし `login.defs` の `PASS_MAX_DAYS` などはこれから作るユーザーにしか効かないため、**既存のユーザーとroot**には `chage` で個別に指定する。
+
+```
+    sudo chage -M 30 -m 2 -W 7 ユーザー名
+    sudo chage -M 30 -m 2 -W 7 root
+```
+
+7. 設定後に既存ユーザーのパスワードを変更する。
+    1. `pwquality.conf` で `difok`(前のパスワードと異なっていなければならない文字数)を確認する。
+
+```
+        grep -n 'difok' /etc/security/pwquality.conf
+```
+
+    2. 対象アカウント(rootとUID 1000以上)のユーザー名・UID・ログインシェルを表示する。
+
+```
+        awk -F: '$3 >= 1000 || $1 == "root" {print $1, $3, $7}' /etc/passwd
+```
+
+    3. 一般ユーザーのパスワードを変更する。現在のパスワード → 新しいパスワード → 再入力の順に入力する。
+
+```
+        passwd
+```
+
+    4. rootのパスワードを変更する。
+
+```
+        sudo passwd root
+```
+
+### 10. 監視スクリプト(monitoring.sh)を作る
+
+rootでホームディレクトリに作成します。Bashスクリプトなので、先頭にシバン(`#!/bin/bash`)を入れます。
+
+```
+nano monitoring.sh
+```
+
+取得した情報を1つのメッセージにまとめ、`wall` で全端末に送信します。表示項目と取得方法は[Configuration](#監視スクリプト)に記載しています。
+
+### 11. 定期実行の設定(cron)
+
+cronを使うと、決まった間隔でスクリプトを自動実行できます。
+
+1. cronをインストールする。
+
+```
+    sudo apt update
+    sudo apt install cron
+```
+
+2. cronサービスを起動し、自動起動を有効にする。
+
+```
+    sudo systemctl enable --now cron
+    sudo systemctl status cron
+```
+
+3. スクリプトに実行権限を付け、まず手動で実行してエラーがないことを確認する。
+
+
+```
+    sudo cp ~/monitoring.sh /usr/local/bin/monitoring.sh
+    sudo chown root:root /usr/local/bin/monitoring.sh
+    sudo chmod 755 /usr/local/bin/monitoring.sh
+    sudo /usr/local/bin/monitoring.sh
+```
+
+4. rootのcrontabに定期実行を登録する。
+
+```
+    sudo crontab -e
+```
+
+    次の行を追加する。
+
+```
+    */10 * * * * /usr/local/bin/monitoring.sh
+```
+
+    `*/10` は10分ごとの意味。残りの `*` は、毎時・毎日・毎月・すべての曜日で実行するという意味。登録後に確認する。
+
+```
+    sudo crontab -l
+```
+
+### 12. 新しいユーザーの作り方
+
+Linuxでは、ユーザーとグループを使ってファイルやシステムの操作権限を管理します。
+
+```
+# 一般ユーザーで実行
 sudo adduser testuser
 id testuser
-su - testuser
-・パスワードを入れて切り替える
-whoami(確認)
+su - testuser            # testuserのパスワードを入力して切り替え
+whoami                   # testuser と表示されれば切り替え成功
+sudo whoami              # sudoグループに所属していないので使えない
+exit                     # 元のユーザーに戻る
 
-・testuserでログインした状態から
-sudo whoami
-
-・testuserはsudoグループに所属していないから使えない
-exit
-
-・mkanekoに戻る
-・現在のユーザーの確認
+# sudoグループに追加
 whoami
 sudo usermod -aG sudo testuser
 id testuser
 su - testuser
 whoami
-sudo whoami
+sudo whoami              # 今度は root と表示される
 ```
 
-13. signature.txtファイルを作成する。VMをシャットダウンし、SHA-1ハッシュ値を計算したものを保存する。
+### 13. signature.txt の作成
+
+VMをシャットダウンし、仮想ディスク(`.vdi`)のSHA-1ハッシュ値を計算して `signature.txt` に保存します。
+
+<!-- TODO: 校舎PCで実際に使ったコマンドと .vdi の保存場所に更新 -->
 ```
-・VMをシャットダウン
-sudo shutdown -h now
-
-・仮想ディスク(.vdi)を探す
-・SHA-1 ハッシュ値を計算する。.vdiファイルのあるディレクトリで
-certUtil -hashfile "Born2beRoot.vdi" SHA1（Windows用）
-Macなら shasum
+sudo shutdown -h now      # VMをシャットダウン
 ```
-* signature.txtのハッシュ値が.vdiのSHA-1と一致するようにする。VMを起動するとハッシュ値が変わるので、評価時はクローンやスナップショットを使う。
 
+`.vdi` ファイルのあるディレクトリで、ホストOSに合わせて次のいずれかを実行します。
 
-## Resources
-- VirtualBox公式サイト
-  Oracle VM VirtualBox 公式ダウンロード
-  (https://www.oracle.com/virtualization/technologies/vm/downloads/virtualbox-downloads.html)
+| ホストOS | コマンド |
+| --- | --- |
+| Linux(Ubuntu) | `sha1sum Born2beRoot.vdi` |
+| macOS | `shasum Born2beRoot.vdi` |
+| Windows | `certUtil -hashfile "Born2beRoot.vdi" SHA1` |
 
+> **注意**: `signature.txt` のハッシュ値は `.vdi` のSHA-1と一致している必要があります。VMを起動するとハッシュ値が変わるため、評価時はクローンやスナップショットを使います。
 
-- VisualBoxとUTMの比較
-  (https://linux-jp.org/?p=16476)
+## Configuration
 
-- Debian Releases:OSについて
-  https://www.debian.org/
-
-- LVM
-  wikiwiki.jpのLVMページ
-  https://wikiwiki.jp/linuxnomemo/LVM
-
-- sudo
-  SUSEの「sudoを使用したスーパーユーザ特権の設定」
-  https://documentation.suse.com/ja-jp/sle-micro/6.0/html/Micro-sudo-configure-superuser-privileges/index.html
-
-  LabExの「sudoers 設定の問題を解決する方法」
-  https://labex.io/ja/tutorials/nmap-how-to-fix-sudoers-configuration-problems-419586
-  
-  Debianの公式サイト
-  https://manpages.debian.org/unstable/manpages-ja/sudo.8.ja.html
-
-  man 5 sudoers(sudoの権限とログ設定)
-  (https://manpages.debian.org/trixie/sudo/sudoers.5.en.html)
-
-  man 8 pam_pwquality
-  (https://manpages.debian.org/trixie/libpam-pwquality/pam_pwquality.8.en.html)
-
-- SSH
-  OpenSSH公式サイト: https://www.openssh.com/
-- ufw, sshd_config, lvm, wall
-  manページ
-
-- cron
-  man 1 crontab(コマンド) 
-  man 5 crontab(時刻の指定と実行についての書き方)
-  (https://manpages.debian.org/trixie/cron/crontab.5.en.html)
-
-- signature.txt
-  certUtil -hashfile "Born2beRoot.vdi" SHA1
-
-- apt 
-  man 8 apt(使い方)
-  (https://manpages.debian.org/trixie/apt/apt.8.en.html)
-
-
-- VM内の `man sshd_config`、`man ufw`、`man lvm`、`man cryptsetup`、`man wall`：設定・操作の確認。
-
-### AI usage
-・作業の順序の整理とコマンドの確認にAIを使った。各設定の意味は公式ドキュメントで確認した。
-・監視スクリプトで抽出したい値の取り出し方（必要な情報の並び順の確認方法やコマンドの書き方）を確認。
-・一次情報の調べ方と、調べたうえで意味が分からないところの解説。
-
-
-## Details
-### Configuration
-
-- ユーザーの設定
+### ユーザーの設定
 
 | 項目 | 名称 | 設定場所 |
 | --- | --- | --- |
 | ホスト名 | mkaneko42 | Debianのインストール |
 | ユーザー名 | mkaneko | Debianのインストール |
 
+### パスワード設定
 
-- パスワード設定
-
-| 要件  | ファイル  	| 設定 |理由|
+| 要件 | ファイル | 設定 | 理由 |
 | --- | --- | --- | --- |
-| 有効期限３０日 | `/etc/login.defs` |PASS_MAX_DAYS 30 | 漏洩のリスクを下げる|
-| 変更間隔の下限２日	|`/etc/login.defs`|PASS_MIN_DAYS 2 | 頻繁に変えすぎない|
-|期限７日前の警告	  |`/etc/login.defs`	  |PASS_WARN_AGE 7	    |期限切れ前に気づける|
-|最少１０文字|`/etc/security/pwquality.conf`|minlen = 10|短すぎないほうが安全|
-|文字種(数字・大文字・小文字を含む)|`/etc/security/pwquality.conf`|dcredit = -1 ucredit = -1 lcredit = -1|複雑にする|
-|同一連続文字３文字以下|`/etc/security/pwquality.conf`|maxrepeat = 3|推測されにくくする|
-|ユーザー名禁止|`/etc/security/pwquality.conf`|usercheck = 1|推測されにくくする|
-|前のパスワードと異なる文字を7文字以上含む(root以外)|`/etc/security/pwquality.conf`|difok = 7|使いまわしの防止|
-|rootもこのポリシーに従う(difok=7以外)|`/etc/common-password`|enforce_for_root|rootの安全も守る|
+| 有効期限30日 | `/etc/login.defs` | `PASS_MAX_DAYS 30` | 漏洩のリスクを下げる |
+| 変更間隔の下限2日 | `/etc/login.defs` | `PASS_MIN_DAYS 2` | 頻繁に変えすぎない |
+| 期限7日前の警告 | `/etc/login.defs` | `PASS_WARN_AGE 7` | 期限切れ前に気づける |
+| 最少10文字 | `/etc/security/pwquality.conf` | `minlen = 10` | 短すぎないほうが安全 |
+| 数字・大文字・小文字を含む | `/etc/security/pwquality.conf` | `dcredit = -1` `ucredit = -1` `lcredit = -1` | 複雑にする |
+| 同一文字の連続は3文字まで | `/etc/security/pwquality.conf` | `maxrepeat = 3` | 推測されにくくする |
+| ユーザー名を含まない | `/etc/security/pwquality.conf` | `usercheck = 1` | 推測されにくくする |
+| 前のパスワードと異なる文字を7文字以上含む(root以外) | `/etc/security/pwquality.conf` | `difok = 7` | 使いまわしの防止 |
+| rootもポリシーに従う(difok以外) | `/etc/pam.d/common-password` | `enforce_for_root` | rootの安全も守る |
 
+### sudoの設定
 
-- sudoの設定
-
-|要件|ファイル|設定|
+| 要件 | ファイル | 設定 |
 | --- | --- | --- |
-|1回のパスワード誤入力は３回まで|`/etc/sudoers`|`passwd_tries=3`|
-|誤パスワードへのメッセージ|`/etc/sudoers`|`badpass_message="Password is incorrect"`|
-|コマンド履歴をログに記録|`/etc/sudoers`|`log_input, log_output iolog_dir="/var/log/sudo" logfile="/var/log/sudo/sudo.log"`|
-|TTYモードの有効化|`/etc/sudoers`|`use_pty`コマンドを専用の記事端末内で実行|
-|sudo実行時のコマンドを探索するパスを制限|`/etc/sudoers`|`secure_path="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"`|
+| パスワード誤入力は3回まで | `/etc/sudoers` | `Defaults passwd_tries=3` |
+| 誤パスワード時のメッセージ | `/etc/sudoers` | `Defaults badpass_message="Password is incorrect"` |
+| 入出力をログに記録 | `/etc/sudoers` | `Defaults log_input, log_output`<br>`Defaults iolog_dir="/var/log/sudo"`<br>`Defaults logfile="/var/log/sudo/sudo.log"` |
+| TTYモードの有効化(コマンドを専用の擬似端末内で実行) | `/etc/sudoers` | `Defaults requiretty` |
+| (補足)コマンドを専用の擬似端末内で実行 | `/etc/sudoers` | `Defaults use_pty`|
+| コマンドを探索するパスの制限 | `/etc/sudoers` | `Defaults secure_path="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"` |
 
-- 監視スクリプト
+### 監視スクリプト
 
-|表示項目|表示データの取得方法|
+| 表示項目 | 表示データの取得方法 |
 | --- | --- |
-|OS| `uname -a`|
-|CPUソケット数 vCPU|`/proc/cpuinfo`の中のIDの重複を削除、processor行をそれぞれ数える|
-|RAM使用量(割合)|`free`のused(used*100/total)。使用量・総量・割合|
-|ディスク使用量(割合)|`df`で容量の表示単位を削除|
-|CPU負荷|`top`でCPUのアイドル率を100から引く|->自信ない
-|最終起動日時|`who -b`から取得|
-|LVM使用の有無|`lsblk`の中にlvmの行があるかどうか|
-|TCP接続数|`ss -tan`のestablished行の数|
-|ログイン中のユーザー数|`who`のユーザー名の重複を除去した数|
-|IPアドレスとMACアドレス|`hostname -I`でIPアドレス、`ip link show`で最初に見つかったMACアドレス|
-|sudo実行回数|`journalctl _COMM=sudo`でCOMMANDとある行の数|
+| OS | `uname -a` |
+| CPUソケット数 / vCPU | `/proc/cpuinfo` の `physical id` の重複を削除して数える / `processor` 行を数える |
+| RAM使用量(割合) | `free` の used と total から計算(used × 100 / total)。使用量・総量・割合を表示 |
+| ディスク使用量(割合) | `df` の出力から容量の表示単位を削除して集計 |
+| CPU負荷 | `top` のCPU行からアイドル率(id)を取り出し、100から引く |
+| 最終起動日時 | `who -b` |
+| LVM使用の有無 | `lsblk` の出力に `lvm` の行があるかどうか |
+| TCP接続数 | `ss -tan` の ESTABLISHED の行数 |
+| ログイン中のユーザー数 | `who` のユーザー名の重複を除いた数 |
+| IPアドレス / MACアドレス | `hostname -I` / `ip link show` で最初に見つかったMACアドレス |
+| sudo実行回数 | `journalctl _COMM=sudo` の `COMMAND` を含む行の数 |
 
+## Resources
+
+- [Oracle VM VirtualBox 公式ダウンロード](https://www.oracle.com/virtualization/technologies/vm/downloads/virtualbox-downloads.html)
+- [VirtualBoxとUTMの比較](https://linux-jp.org/?p=16476)
+- [Debian Releases(OSについて)](https://www.debian.org/)
+- [LVM(wikiwiki.jp)](https://wikiwiki.jp/linuxnomemo/LVM)
+- sudo
+    - [SUSE: sudoを使用したスーパーユーザ特権の設定](https://documentation.suse.com/ja-jp/sle-micro/6.0/html/Micro-sudo-configure-superuser-privileges/index.html)
+    - [LabEx: sudoers設定の問題を解決する方法](https://labex.io/ja/tutorials/nmap-how-to-fix-sudoers-configuration-problems-419586)
+    - [Debian man: sudo(8)(日本語)](https://manpages.debian.org/unstable/manpages-ja/sudo.8.ja.html)
+    - [man 5 sudoers(権限とログ設定)](https://manpages.debian.org/trixie/sudo/sudoers.5.en.html)
+- [man 8 pam_pwquality](https://manpages.debian.org/trixie/libpam-pwquality/pam_pwquality.8.en.html)
+- [OpenSSH公式サイト](https://www.openssh.com/)
+- cron: [man 5 crontab(時刻の指定と実行の書き方)](https://manpages.debian.org/trixie/cron/crontab.5.en.html)、man 1 crontab(コマンド)
+- apt: [man 8 apt(使い方)](https://manpages.debian.org/trixie/apt/apt.8.en.html)
+- manページ: `ufw`、`sshd_config`、`lvm`、`cryptsetup`、`wall`(VM内で `man` コマンドにより設定・操作を確認)
+
+### AI usage
+
+- 作業の順序の整理と、コマンドの確認に使用した。各設定の意味は公式ドキュメントで確認した。
+- 監視スクリプトで抽出したい値の取り出し方(必要な情報の並び順の確認方法やコマンドの書き方)の確認に使用した。
+- 一次情報の調べ方と、調べたうえで意味が分からなかった部分の解説に使用した。
