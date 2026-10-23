@@ -67,6 +67,7 @@ UFWはLinuxのパケットフィルタを管理するツールです。ポート
 | --- | --- | --- |
 | 系統 | Ubuntu標準(Debianでも利用可) | CentOS / RHEL / AlmaLinux / Fedora系 |
 | 長所 | コマンドが簡潔でわかりやすく、資料が多い | ゾーンベースの管理や、ランタイム/パーマネント設定の分離ができる |
+@includedir /etc/sudoers.d
 
 ### 5. パーティション構成: LVM
 
@@ -108,7 +109,7 @@ UFWはLinuxのパケットフィルタを管理するツールです。ポート
 | --- | --- |
 | CPU | 2コア |
 | メモリ | 2048MB |
-| 仮想ディスク | 20GB(動的割り当て) |
+| 仮想ディスク | 30GB(動的割り当て) |
 | グラフィック | 最小限 |
 | ネットワーク | NAT(Network Address Translation。ホストOSのインターネット回線を借りてネットにつなぐ仕組み) |
 | GUI | なし |
@@ -147,7 +148,8 @@ UFWはLinuxのパケットフィルタを管理するツールです。ポート
     Separate /home, /var and /tmp partitions
 ```
 
-    暗号化用のパスフレーズの入力画面が出るので指定する。LVMのボリュームグループのうち、どれだけの容量を使うか聞かれるが、動的割り当てなので100%で問題なかった。実際の分割は以下の通り。
+    暗号化用のパスフレーズの入力画面が@includedir /etc/sudoers.d
+出るので指定する。LVMのボリュームグループのうち、どれだけの容量を使うか決める。実際の分割は以下の通り。
 
     <!-- TODO: 校舎PCで実装後、sudo lsblk の結果に差し替え -->
 ```
@@ -162,14 +164,15 @@ UFWはLinuxのパケットフィルタを管理するツールです。ポート
         ├─mkaneko42--vg-var    254:2    0    2G  0 lvm   /var
         ├─mkaneko42--vg-swap_1 254:3    0  936M  0 lvm   [SWAP]
         ├─mkaneko42--vg-tmp    254:4    0  568M  0 lvm   /tmp
-        └─mkaneko42--vg-home   254:5    0  8.6G  0 lvm   /home
+        └─mkaneko42--vg-home   25@includedir /etc/sudoers.d
+4:5    0  8.6G  0 lvm   /home
     sr0                         11:0    1 1024M  1 rom
 ```
 
     `/boot` はカーネルなどの起動ファイル用です。LUKSの中にroot・home・swapなどを置くことで、OSやユーザーデータ、swapへの書き込みが暗号化されます。rootとhomeは論理ボリュームを分けて、容量を個別に割り当てています。
 
 6. **パッケージマネージャの設定**: Debianの利用統計を送信するか聞かれたら、Noにして問題ない。
-7. **Software selection**: 「SSH server」と、選べるなら「standard system utilities」にチェックを入れる。課題要件でX.OrgやWaylandなどのグラフィックサーバーが禁止されているので、デスクトップ環境は選ばない。
+7. **Software selection**: 「SSH server」と「standard system utilities」にチェックを入れる。課題要件でX.OrgやWaylandなどのグラフィックサーバーが禁止されているので、デスクトップ環境は選ばない。
 8. **GRUBブートローダ**: インストールする(Yes)。インストール先は `/dev/sda`。PCの電源が入るとBIOS/UEFIが動き、続いてGRUBが起動する。GRUBの役割は、Linuxカーネルを見つけてメモリに読み込み、起動させること。
 9. **完了**: continueを押し、再起動後に暗号化のパスフレーズ入力、続いてログイン画面が出ればインストール成功。
 
@@ -249,7 +252,7 @@ sudoは、一般ユーザーが一時的に管理者権限でコマンドを実�
 4. rootログイン禁止を確認する。`permitrootlogin no` と出れば成功。
 
 ```
-    sudo sshd -T | grep permitrootlogin
+    sudo sshd -T | grep -i permitrootlogin
 ```
 
 5. 一般ユーザーでSSH接続できるか確認する。
@@ -384,20 +387,20 @@ sudo aa-status | grep -E 'apparmor module|profiles are loaded|profiles are in en
     ls -l /var/log/sudo/sudo.log                   # ファイルの権限を確認
     ls -ld /var/log/sudo                           # ディレクトリの権限を確認
 ```
-
-4. 設定ファイルをバックアップしてから、`visudo` で編集する。`visudo` は構文チェックをしてくれるので安全。
+!!10/23変更！！
+4. 設定ファイルをバックアップし、`/etc/sudoers.d/'に'sudoers_config`を作っておき編集する。rootとユーザーに読み取り権限のみにしてから、`visudo -c`で 構文チェックをする。書き込み権限（6）」が残っていると、安全のために設定ファイル自体を完全に無視（拒否）する仕様になっているためです。
 
 ```
     sudo cp /etc/sudoers /etc/sudoers.bak
     sudo visudo
 ```
-5. TTYモードの動作を確認する。端末を割り当てない形でSSH経由のsudoを実行すると、拒否されればOK。
+5. TTYモードの動作を確認する。端末を割り当てない形でSSH経由のsudoを実行すると、拒否されればOK。(-Tによってあえて「ターミナルを持たない接続」を作成)
 
 ```
     ssh -T -p 4242 ユーザー名@127.0.0.1 sudo whoami
 
 ```
-    `sudo: a tty is required` のようなエラーが出れば、TTY必須の設定が効いている。
+    `sudo: sorry, you must have a tty to run sudo` のようなエラーが出れば、TTY必須の設定が効いている。
 
 6. 変更を確認する。ログに記録が表示されれば成功。
 
@@ -485,7 +488,7 @@ PAM(`pam_pwquality`)で実装します。設定値は[Configuration](#パスワ�
 
 ### 10. 監視スクリプト(monitoring.sh)を作る
 
-rootでホームディレクトリに作成します。Bashスクリプトなので、先頭にシバン(`#!/bin/bash`)を入れます。
+rootでホームディレクトリ(`/usr/local/bin`)に作成します。Bashスクリプトなので、先頭にシバン(`#!/bin/bash`)を入れます。
 
 ```
 nano monitoring.sh
