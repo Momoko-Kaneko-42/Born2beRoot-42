@@ -67,7 +67,7 @@ UFWはLinuxのパケットフィルタを管理するツールです。ポート
 | --- | --- | --- |
 | 系統 | Ubuntu標準(Debianでも利用可) | CentOS / RHEL / AlmaLinux / Fedora系 |
 | 長所 | コマンドが簡潔でわかりやすく、資料が多い | ゾーンベースの管理や、ランタイム/パーマネント設定の分離ができる |
-@includedir /etc/sudoers.d
+
 
 ### 5. パーティション構成: LVM
 
@@ -148,7 +148,7 @@ UFWはLinuxのパケットフィルタを管理するツールです。ポート
     Separate /home, /var and /tmp partitions
 ```
 
-    暗号化用のパスフレーズの入力画面が@includedir /etc/sudoers.d
+    暗号化用のパスフレーズの入力画面が
 出るので指定する。LVMのボリュームグループのうち、どれだけの容量を使うか決める。実際の分割は以下の通り。
 
     <!-- TODO: 校舎PCで実装後、sudo lsblk の結果に差し替え -->
