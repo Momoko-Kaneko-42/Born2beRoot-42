@@ -26,17 +26,17 @@ CPU
 
 [パーティション構成]sudo lsblk
 NAME                       MAJ:MIN RM  SIZE RO TYPE  MOUNTPOINTS
-sda                          8:0    0   20G  0 disk
-├─sda1                       8:1    0  918M  0 part  /boot
-├─sda2                       8:2    0    1K  0 part
-└─sda5                       8:5    0 19.1G  0 part
-  └─sda5_crypt             254:0    0 19.1G  0 crypt
-    ├─mkaneko42--vg-root   254:1    0    7G  0 lvm   /
-    ├─mkaneko42--vg-var    254:2    0    2G  0 lvm   /var
-    ├─mkaneko42--vg-swap_1 254:3    0  936M  0 lvm   [SWAP]
-    ├─mkaneko42--vg-tmp    254:4    0  568M  0 lvm   /tmp
-    └─mkaneko42--vg-home   254:5    0  8.6G  0 lvm   /home
-sr0                         11:0    1 1024M  1 rom
+sda                          8:0    0 15.2G  0 disk  
+├─sda1                       8:1    0  819M  0 part  /boot
+├─sda2                       8:2    0    1K  0 part  
+└─sda5                       8:5    0 14.4G  0 part  
+  └─sda5_crypt             254:0    0 14.4G  0 crypt 
+    ├─mkaneko42--vg-root   254:1    0  6.6G  0 lvm   /
+    ├─mkaneko42--vg-var    254:2    0  1.9G  0 lvm   /var
+    ├─mkaneko42--vg-swap_1 254:3    0  572M  0 lvm   [SWAP]
+    ├─mkaneko42--vg-tmp    254:4    0  496M  0 lvm   /tmp
+    └─mkaneko42--vg-home   254:5    0  2.5G  0 lvm   /home
+sr0  
 
 [インストール時に選んだ項目]
 ホスト名 mkaneko42(/etc/hostname)
@@ -162,34 +162,12 @@ usercheck = 1
 
 [etc/login.defs]パスワードの有効期限
  sudo cat login.defs
-#
-# /etc/login.defs - Configuration control definitions for the shadow package.
-#
 
-# REQUIRED for useradd/userdel/usermod
-#   Directory where mailboxes reside, _or_ name of file, relative to the
-#   home directory.  If you _do_ define MAIL_DIR and MAIL_FILE,
-#   MAIL_DIR takes precedence.
-#
-#   Essentially:
-#      - MAIL_DIR defines the location of users mail spool files
-#        (for mbox use) by appending the username to MAIL_DIR as defined
-#        below.
-#      - MAIL_FILE defines the location of the users mail spool files as the
-#        fully-qualified filename obtained by prepending the user home
-#        directory before $MAIL_FILE
-#
-# NOTE: This is no more used for setting up users MAIL environment variable
-#       which is, starting from shadow 4.0.12-1 in Debian, entirely the
-#       job of the pam_mail PAM modules
-#       See default PAM configuration files provided for
-#       login, su, etc.
-#
 # This is a temporary situation: setting these variables will soon
 # move to /etc/default/useradd and the variables will then be
 # no more supported
 MAIL_DIR        /var/mail
-#MAIL_FILE      .mail
+
 
 #
 # Enable display of unknown usernames when login(1) failures are recorded.
@@ -205,19 +183,12 @@ LOG_UNKFAIL_ENAB        no
 LOG_OK_LOGINS           no
 
 #
-# If defined, file which maps tty line to TERM environment parameter.
-# Each line of the file is in a format similar to "vt100  tty01".
-#
-#TTYTYPE_FILE   /etc/ttytype
-
-#
 # If defined, file which inhibits all the usual chatter during the login
 # sequence.  If a full pathname, then hushed mode will be enabled if the
 # user's name or shell are found in the file.  If not a full pathname, then
 # hushed mode will be enabled if the file exists in the user's home directory.
 #
 HUSHLOGIN_FILE  .hushlogin
-#HUSHLOGIN_FILE /etc/hushlogins
 
 #
 # *REQUIRED*  The default PATH settings, for superuser and normal users.

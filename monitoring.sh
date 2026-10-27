@@ -10,7 +10,7 @@ disku=$(df -BG / | awk 'NR==2 {gsub("G","",$2); gsub("G","",$3); printf "%s/%sGB
 lboot=$(who -b | awk '{print $3, $4}'cpul=$(top -bn1 | grep 'Cpu' | sed 's/,/ /g' | awk '{for(i=1;i<=NF;i++) if($i=="id") printf"%.1f%%\n", 100-$(i-1)}'))
 lvmu=$(lsblk | grep -q 'lvm' && echo yes || echo no)
 tcpc=$(ss -Htan state established | wc -l)
-userl=$(who | awk '{print $1}' | sort -u | wc -l)
+userl=$(users | sort -u | wc -l)
 nw1=$(hostname -I | awk '{printf $1}')
 nw2=$(ip link show | awk '/link\/ether/ {printf $2; exit}')
 sd=$(journalctl _COMM=sudo | grep -c 'COMMAND=')
