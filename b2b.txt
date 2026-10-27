@@ -379,3 +379,9 @@ password        required                        pam_permit.so
 - sudo hostnamectl set-hostname
 - sudo ufw allow / sudo ufw delete
 - sudo chage -l ユーザー名
+
+
+[signature.txtとレビュー開始時に得たハッシュ値を比較する。]
+Born2beRoot.vdiのあるディレクトリで（ホスト側のターミナルで作業）、
+sha1sum Born2beRoot.vdi>review.txt
+diff <(cut -d ' ' -f 1 review.txt) signature.txt
