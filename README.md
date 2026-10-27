@@ -109,7 +109,7 @@ UFWはLinuxのパケットフィルタを管理するツールです。ポート
 | --- | --- |
 | CPU | 2コア |
 | メモリ | 2048MB |
-| 仮想ディスク | 30GB(動的割り当て) |
+| 仮想ディスク | 15GB(動的割り当て) |
 | グラフィック | 最小限 |
 | ネットワーク | NAT(Network Address Translation。ホストOSのインターネット回線を借りてネットにつなぐ仕組み) |
 | GUI | なし |
@@ -131,13 +131,13 @@ UFWはLinuxのパケットフィルタを管理するツールです。ポート
 
 ディスクの暗号化(LVM)はDebianのインストーラー側で設定するため、VirtualBox側では普通の仮想ディスクを用意するだけで十分です。
 
-<!-- TODO: 校舎PCでISOの保存場所・VirtualBoxの画面表示が違えば更新 -->
+
 
 ### 2. Debianのインストールとパーティション設定
 
 公式サイトからダウンロードしたISOをVirtualBoxに指定しておくと、続けてインストールが始まります。
 
-1. **言語・キーボード**: JapaneseやJapanを選ぶ。選択肢がなければEnglishやusでも問題ない。キーボードは使っている配列に合わせる。
+1. **言語・キーボード**: Englishとus（仮想マシンのターミナルで文字化けするため）。地域は日本。キーボードは使っている配列に合わせる。
 2. **ホスト名**: `intra名42`(例: `mkaneko42`)
 3. **ドメイン**: 空欄
 4. **ユーザーとパスワード**: rootのパスワードと、一般ユーザー名・パスワードを設定する。
@@ -146,32 +146,34 @@ UFWはLinuxのパケットフィルタを管理するツールです。ポート
 ```
     Guided - use entire disk and set up encrypted LVM
     Separate /home, /var and /tmp partitions
+
 ```
 
-    暗号化用のパスフレーズの入力画面が
-出るので指定する。LVMのボリュームグループのうち、どれだけの容量を使うか決める。実際の分割は以下の通り。
 
-    <!-- TODO: 校舎PCで実装後、sudo lsblk の結果に差し替え -->
+- 暗号化用のパスフレーズの入力画面が出るので指定する。LVMのボリュームグループのうち、どれだけの容量を使うか決める。実際の分割は以下の通り。
+
+
+
 ```
-    $ sudo lsblk
-    NAME                       MAJ:MIN RM  SIZE RO TYPE  MOUNTPOINTS
-    sda                          8:0    0   20G  0 disk
-    ├─sda1                       8:1    0  918M  0 part  /boot
-    ├─sda2                       8:2    0    1K  0 part
-    └─sda5                       8:5    0 19.1G  0 part
-      └─sda5_crypt             254:0    0 19.1G  0 crypt
-        ├─mkaneko42--vg-root   254:1    0    7G  0 lvm   /
-        ├─mkaneko42--vg-var    254:2    0    2G  0 lvm   /var
-        ├─mkaneko42--vg-swap_1 254:3    0  936M  0 lvm   [SWAP]
-        ├─mkaneko42--vg-tmp    254:4    0  568M  0 lvm   /tmp
-        └─mkaneko42--vg-home   25@includedir /etc/sudoers.d
-4:5    0  8.6G  0 lvm   /home
-    sr0                         11:0    1 1024M  1 rom
+NAME                       MAJ:MIN RM  SIZE RO TYPE  MOUNTPOINTS
+sda                          8:0    0 15.2G  0 disk  
+├─sda1                       8:1    0  819M  0 part  /boot
+├─sda2                       8:2    0    1K  0 part  
+└─sda5                       8:5    0 14.4G  0 part  
+  └─sda5_crypt             254:0    0 14.4G  0 crypt 
+    ├─mkaneko42--vg-root   254:1    0  6.6G  0 lvm   /
+    ├─mkaneko42--vg-var    254:2    0  1.9G  0 lvm   /var
+    ├─mkaneko42--vg-swap_1 254:3    0  572M  0 lvm   [SWAP]
+    ├─mkaneko42--vg-tmp    254:4    0  496M  0 lvm   /tmp
+    └─mkaneko42--vg-home   254:5    0  2.5G  0 lvm   /home
+sr0                         11:0    1 1024M  1 rom   
+                   
 ```
 
-    `/boot` はカーネルなどの起動ファイル用です。LUKSの中にroot・home・swapなどを置くことで、OSやユーザーデータ、swapへの書き込みが暗号化されます。rootとhomeは論理ボリュームを分けて、容量を個別に割り当てています。
+   -  `/boot` はカーネルなどの起動ファイル用です。LUKSの中にroot・home・swapなどを置くことで、OSやユーザーデータ、swapへの書き込みが暗号化されます。rootとhomeは論理ボリュームを分けて、容量を個別に割り当てています。
 
-6. **パッケージマネージャの設定**: Debianの利用統計を送信するか聞かれたら、Noにして問題ない。
+6. **パッケージマネージャの設定**: Debianのアーカイブミラーはde.debian.orgを選択。
+HTTP proxy informationは空欄、Debianの利用統計を送信するか聞かれたら、Noにして問題ない。
 7. **Software selection**: 「SSH server」と「standard system utilities」にチェックを入れる。課題要件でX.OrgやWaylandなどのグラフィックサーバーが禁止されているので、デスクトップ環境は選ばない。
 8. **GRUBブートローダ**: インストールする(Yes)。インストール先は `/dev/sda`。PCの電源が入るとBIOS/UEFIが動き、続いてGRUBが起動する。GRUBの役割は、Linuxカーネルを見つけてメモリに読み込み、起動させること。
 9. **完了**: continueを押し、再起動後に暗号化のパスフレーズ入力、続いてログイン画面が出ればインストール成功。
@@ -197,7 +199,7 @@ sudoは、一般ユーザーが一時的に管理者権限でコマンドを実�
     sudo --version
 ```
 
-    なければ、一度rootでログインし直してインストールする。
+なければ、一度rootでログインし直してインストールする。
 
 ```
     su -              # rootのパスワードを入力
@@ -240,7 +242,7 @@ sudoは、一般ユーザーが一時的に管理者権限でコマンドを実�
  | `#Port 22` | `Port 4242` |
  | `#PermitRootLogin prohibit-password` | `PermitRootLogin no` |
 
-    先頭の `#`(コメントアウト)は削除する。nanoの保存は `Ctrl+O` → `Enter` → `Ctrl+X`。
+先頭の `#`(コメントアウト)は削除する。nanoの保存は `Ctrl+O` → `Enter` → `Ctrl+X`。
 
 3. 設定を反映するためにSSHを再起動し、ポートを確認する。LISTENの表示に4242が出ていれば成功。
 
@@ -263,7 +265,7 @@ sudoは、一般ユーザーが一時的に管理者権限でコマンドを実�
         ssh -p 4242 ユーザー名@127.0.0.1
 ```
 
-    - 接続先を確認する。
+ 接続先を確認する。
 
 ```
         hostname    # ホスト名
@@ -317,7 +319,7 @@ sudo aa-status | grep -E 'apparmor module|profiles are loaded|profiles are in en
     4242/tcp (v6)              ALLOW       Anywhere (v6)
 ```
 
-    上のようになっていれば許可されている。先頭が `Status: inactive` の場合は、ルールを登録しただけでファイアウォールはまだ有効になっていない。
+上のようになっていれば許可されている。先頭が `Status: inactive` の場合は、ルールを登録しただけでファイアウォールはまだ有効になっていない。
 
 5. UFWを有効にして確認する。
 
@@ -326,7 +328,7 @@ sudo aa-status | grep -E 'apparmor module|profiles are loaded|profiles are in en
     sudo ufw status verbose
 ```
 
-    `verbose` を付けると、デフォルトポリシー(incomingはdeny、outgoingはallowなど)も一緒に表示される。余分なルールがある場合は削除する。
+`verbose` を付けると、デフォルトポリシー(incomingはdeny、outgoingはallowなど)も一緒に表示される。余分なルールがある場合は削除する。
 
 ```
     sudo ufw delete allow 22/tcp
@@ -387,7 +389,7 @@ sudo aa-status | grep -E 'apparmor module|profiles are loaded|profiles are in en
     ls -l /var/log/sudo/sudo.log                   # ファイルの権限を確認
     ls -ld /var/log/sudo                           # ディレクトリの権限を確認
 ```
-!!10/23変更！！
+
 4. 設定ファイルをバックアップし、`/etc/sudoers.d/'に'sudoers_config`を作っておき編集する。rootとユーザーに読み取り権限のみにしてから、`visudo -c`で 構文チェックをする。書き込み権限（6）」が残っていると、安全のために設定ファイル自体を完全に無視（拒否）する仕様になっているためです。
 
 ```
@@ -431,7 +433,7 @@ PAM(`pam_pwquality`)で実装します。設定値は[Configuration](#パスワ�
     sudo nano /etc/security/pwquality.conf
 ```
 
-    `*credit` の値は、負数なら「最低限必要な文字数」、正数なら「長さの判定時に加算できる上限」を意味する。
+`*credit` の値は、負数なら「最低限必要な文字数」、正数なら「長さの判定時に加算できる上限」を意味する。
 
 4. 追加した設定を確認する。
 
@@ -445,7 +447,7 @@ PAM(`pam_pwquality`)で実装します。設定値は[Configuration](#パスワ�
     grep -nE 'pam_pwquality|pam_pwhistory|pam_unix' /etc/pam.d/common-password
 ```
 
-    表示例:
+表示例:
 
 ```
     password requisite pam_pwquality.so retry=3 enforce_for_root
@@ -462,25 +464,26 @@ PAM(`pam_pwquality`)で実装します。設定値は[Configuration](#パスワ�
 ```
 
 7. 設定後に既存ユーザーのパスワードを変更する。
-    1. `pwquality.conf` で `difok`(前のパスワードと異なっていなければならない文字数)を確認する。
+
+　1. `pwquality.conf` で 　　`difok`(前のパスワードと異なっていなければならない文字数)を確認する。
 
 ```
         grep -n 'difok' /etc/security/pwquality.conf
 ```
 
-    2. 対象アカウント(rootとUID 1000以上)のユーザー名・UID・ログインシェルを表示する。
+　2.対象アカウント(rootとUID 1000以上)のユーザー名・UID・ログインシェルを表示する。
 
 ```
         awk -F: '$3 >= 1000 || $1 == "root" {print $1, $3, $7}' /etc/passwd
 ```
 
-    3. 一般ユーザーのパスワードを変更する。現在のパスワード → 新しいパスワード → 再入力の順に入力する。
+　3. 一般ユーザーのパスワードを変更する。現在のパスワード → 新しいパスワード → 再入力の順に入力する。
 
 ```
         passwd
 ```
 
-    4. rootのパスワードを変更する。
+   　4. rootのパスワードを変更する。
 
 ```
         sudo passwd root
@@ -530,13 +533,13 @@ cronを使うと、決まった間隔でスクリプトを自動実行できま�
     sudo crontab -e
 ```
 
-    次の行を追加する。
+次の行を追加する。
 
 ```
     */10 * * * * /usr/local/bin/monitoring.sh
 ```
 
-    `*/10` は10分ごとの意味。残りの `*` は、毎時・毎日・毎月・すべての曜日で実行するという意味。登録後に確認する。
+`*/10` は10分ごとの意味。残りの `*` は、毎時・毎日・毎月・すべての曜日で実行するという意味。登録後に確認する。
 
 ```
     sudo crontab -l
@@ -568,7 +571,7 @@ sudo whoami              # 今度は root と表示される
 
 VMをシャットダウンし、仮想ディスク(`.vdi`)のSHA-1ハッシュ値を計算して `signature.txt` に保存します。
 
-<!-- TODO: 校舎PCで実際に使ったコマンドと .vdi の保存場所に更新 -->
+
 ```
 sudo shutdown -h now      # VMをシャットダウン
 ```
@@ -628,7 +631,7 @@ sudo shutdown -h now      # VMをシャットダウン
 | CPU負荷 | `top` のCPU行からアイドル率(id)を取り出し、100から引く |
 | 最終起動日時 | `who -b` |
 | LVM使用の有無 | `lsblk` の出力に `lvm` の行があるかどうか |
-| TCP接続数 | `ss -tan` の ESTABLISHED の行数 |
+| TCP接続数 | `ss -Htan` の ESTABLISHED の行数 |
 | ログイン中のユーザー数 | `who` のユーザー名の重複を除いた数 |
 | IPアドレス / MACアドレス | `hostname -I` / `ip link show` で最初に見つかったMACアドレス |
 | sudo実行回数 | `journalctl _COMM=sudo` の `COMMAND` を含む行の数 |
