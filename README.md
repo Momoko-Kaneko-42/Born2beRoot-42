@@ -632,7 +632,7 @@ sudo shutdown -h now      # VMをシャットダウン
 | 最終起動日時 | `who -b` |
 | LVM使用の有無 | `lsblk` の出力に `lvm` の行があるかどうか |
 | TCP接続数 | `ss -Htan` の ESTABLISHED の行数 |
-| ログイン中のユーザー数 | `who` のユーザー名の重複を除いた数 |
+| ログイン中のユーザー数 | `users` のユーザー名の重複を除いた数 |
 | IPアドレス / MACアドレス | `hostname -I` / `ip link show` で最初に見つかったMACアドレス |
 | sudo実行回数 | `journalctl _COMM=sudo` の `COMMAND` を含む行の数 |
 
